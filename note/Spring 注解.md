@@ -564,6 +564,12 @@ private String nickName;
 
 ##### Spring还支持使用@Resource(JSR250)和@Inject(JSR330)[java规范的注解]
 
+JSR是JavaSpecification Requests的缩写，意思是“Java 规范提案”。是指向JCP(JavaCommunity Process)提出新增一个标准化技术规范的正式请求。任何人都可以提交JSR，以向Java平台增添新的API和服务。JSR已成为Java界的一个重要标准。简单的就是jsr是java开发者以及授权者指定的标准，而java开发者以及授权者形成一个jcp国际组织。职能是指定java标准。
+
+JCP
+
+JCP由SUN于1995年创造Java的非正式过程，演进到如今有数百名来自世界各地Java代表成员一同监督Java发展的正式程序 。
+
 `@Resources:`可以和@`Autowired`一样实现自动装配功能；默认是按照`组件名称`进行装配的 `byName`； 没有能支持@Primary功能没有支持@Autowired（reqiured=false）;
 
 `@Inject：`需要导入javax.inject的包，和Autowired的功能一样。没有required=false的功能；

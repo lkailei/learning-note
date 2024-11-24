@@ -1,20 +1,22 @@
-## Linux 操作
 
-### Linux常用的命令：
 
-####  文件操作
+# Linux 操作
+
+## Linux常用的命令：
+
+###  文件操作
 
 - 目录切换：
 
 > ​	cd usr		切换到该目录下usr目录 	
 
-> ​cd ../		切换到上一层目录
+> cd ../		切换到上一层目录
 
-> ​cd /		切换到系统根目录
+> cd /		切换到系统根目录
 
-> ​cd ~		切换到用户主目录
+> cd ~		切换到用户主目录
 
-> ​cd -		切换到上一个所在目录
+> cd -		切换到上一个所在目录
 
 - 查看目录： ls
 
@@ -74,15 +76,164 @@ tar命令  -c 是压缩
 - ​		解压到指定目录： tar -zxvf xx.tar.gz -C /目录
 
 
-#### 网络操作
+### 网络操作
 
 **查看ip:**  `ifconfig`    `ip addr`
 
 **查看日志** ： `tail -f xxx.log`
 
-### Ubuntu下操作
+#### 配置固定的ip和主机名称
 
-#### 安装jdk:
+1. 设置VMWare的虚拟网络的网段
+
+   ```
+   # 网段设置为192.168.88.0
+   # 网关设置为192.168.88.2
+   ```
+
+   ![1704601992176](assets/1704601992176.png)
+
+   
+
+   ![1704602171563](assets/1704602171563.png)
+
+2. 配置固定ip
+
+```
+#修改主机名称
+hostsnamectl set-hostname node1;
+# 修改IP地址(网卡配置文件)
+vim /etc/sysconfig/network-scripts/ifcfg-ens33
+ # 修改BOOTPROTO属性原始为dhcp
+ BOOTPROTO="static"
+ #增加一下静态地址
+ IPADDR = "192.168.88.131"
+ # 增加mask,网关，dns
+ NETMASK="255.255.255.0"
+ GATEWAY="192.168.88.2" # 与虚拟机配置有关
+ DNS1="192.168.88.2" 
+#重启网卡
+systemctl restart network
+```
+
+
+
+### 防火墙相关
+
+默认防火墙是关闭状态，关于防火墙操作如下
+
+```
+# 开启防火墙
+sudo systemctl start firewalld
+
+# 关闭防火墙
+sudo systemctl stop firewalld
+# 关闭防火墙开机自启
+sudo systemctl disable firewalld
+
+# 查看防火墙状态
+sudo systemctl status firewalld
+
+# 增加开放端口
+sudo firewall-cmd --add-port=端口号/协议
+sudo firewall-cmd --add-port=80/tcp
+
+# 删除开放的端口
+sudo firewall-cmd --remove-port=端口号/协议
+
+# 列出防火墙规则
+sudo firewall-cmd --list-all
+
+# 列出防火墙所开放所有的的端口
+sudo firewall-cmd --list-ports
+
+# 列出指定区域开放的端口
+sudo firewall-cmd --zone=public --list-ports
+
+# 重新加载防火墙配置
+sudo firewall-cmd --reload
+```
+
+
+
+```
+# 检查防火墙
+iptables -L
+```
+
+#### SELinux
+
+selinux是用以限制用户和程序的相关权限，确保系统的安全稳定的。
+
+```
+vim /etc/sysconfig/selinux
+
+# 将SELINUX=enforcing改为
+SELINUX=disabled
+
+# init 6 命令进行重启
+init 6 
+```
+
+### 用户,用户组操作相关
+
+```
+# 查看是否存在用户
+cat /etc/passwd | grep user1
+
+# 增加用户并设置密码
+sudo useradd -d /home/ftpuser -s /bin/false ftpuser
+sudo passwd ftpuser
+# 删除用户
+sudo userdel 用户名
+
+# 修改用户密码
+usermod -p  用户名
+
+#切换相应的用户
+su - root
+
+# 设置用户组
+groupadd 组名
+
+# 修改用户组名
+groupmod -n newgroupname 组名
+
+# 删除用户组
+groupdel 组名
+
+# 查看用户组
+cat /etc/group
+
+# 将用户添加到组名
+usermod -aG 组名 用户名
+
+#更改用户shell 
+chsh [选项] 用户名
+```
+
+###  时区和自动时间同步配置
+
+```
+# 1. 按照ntp软件
+yum install -y ntp
+# 2.更新时区
+rm -rf /etc/localtime;
+sudo ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+# 查看时间
+date
+# 3.同步时间 校准
+ntpdate -u ntp.aliyun.com
+# 4.开启服务并开机自启
+systemctl start ntpd
+systemctl enable ntpd
+```
+
+
+
+## Ubuntu下操作
+
+### 安装jdk:
 
 当使用这个命令安装时：
 
@@ -92,7 +243,7 @@ tar命令  -c 是压缩
 ​	tar: Child returned status 1 
 ​	tar: Error is not recoverable: exiting now 
 
-​需要加上： `--no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"`因为oracle公司要你接受同意没如果直接不带头格式下载后不能解压：
+需要加上： `--no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"`因为oracle公司要你接受同意没如果直接不带头格式下载后不能解压：
 
 所以用以下方式就可以了：
 
@@ -102,7 +253,7 @@ wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-
 
 **解压**：`tar -zxvf jdk-8u181-linux-x64.tar.gz`
 
-##### **jdk环境配置：**
+#### **jdk环境配置：**
 
 `vim /etc/profile`
 方式一
@@ -125,7 +276,7 @@ export JAVA_HOME=/usr/local/src/java/jdk1.7.0_71
 export CLASSPATH=.:$JAVA_HOME/lib.tools.jar
 export PATH=$JAVA_HOME/bin:$PATH
 export export JAVA_HOME CLASSPATH PATH
-```		
+```
 点击esc等下面的insert发生变化输入:qw保存并退出
 
 保存生效：`source /etc/profile`
@@ -136,7 +287,7 @@ export export JAVA_HOME CLASSPATH PATH
 
 卸载.gz：`rm -rf /java/ jdk-8u181-linux-x64.tar.gz`
 
-#### 安装tomcat：
+### 安装tomcat：
 
 地址去官网看Tomcat的liunx版本的下载的链接直接使用命令
 
@@ -169,7 +320,7 @@ export CATALINA_HOME
 
 这样就可以直接访问了8080断就就可以直接访问了
 
-#### 安装mysql:
+### 安装mysql:
 
 查看自带mysql输入 `rpm -qa | grep mysql`
 
@@ -177,7 +328,7 @@ export CATALINA_HOME
 
 在 Ubuntu 16.04 中，默认情况下，只有最新版本的 MySQL 包含在 APT 软件包存储库中。在撰写本文时，那是 MySQL 5.7要安装它，只需更新服务器上的包索引并安装默认包 apt-get。
 
-##### 安装执行以下命令：
+#### 安装执行以下命令：
 
 
 
@@ -194,19 +345,19 @@ export CATALINA_HOME
 
 这样的等待完成安装即可。
 
-##### 配置远程连接
+#### 配置远程连接
 
 编辑 ： `/etc/mysql/mysql.conf.d/mysqld.cnf`
 
 将`bind-address = 127.0.0.1`修改为`bind-address = 0.0.0.0`
 
-​加入：`character-set-server=utf8`使其使用utf-8编码
+加入：`character-set-server=utf8`使其使用utf-8编码
 
 [![DS0VxO.png](https://s3.ax1x.com/2020/11/13/DS0VxO.png)](https://imgchr.com/i/DS0VxO)
 
-​重新启动并登陆mysql:
+重新启动并登陆mysql:
 ```
-​	sudo service mysql restart
+	sudo service mysql restart
 
 ​	mysql -uroot -p
 ```
@@ -225,7 +376,7 @@ export CATALINA_HOME
 
 **卸载mysql:**
 ```
-​			sudo apt purge mysql-*
+			sudo apt purge mysql-*
 ​			sudo rm -rf /etc/mysql/ /var/lib/mysql
 ​			sudo apt autoremove
 ​			sudo apt autoreclean
@@ -234,9 +385,9 @@ export CATALINA_HOME
 
 配置和上面的一致即可。
 
-### CentOS下操作：
+## CentOS下操作：
 
-#### 安装jdk
+### 安装jdk
 
 ```
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.tar.gz
@@ -253,9 +404,13 @@ wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-
 	export export JAVA_HOME CLASSPATH PATH
 ```
 
+保存生效：`source /etc/profile`
 
+重启机器：`sudo shutdown -r now`
 
-#### 安装mysql
+输入查看是否生效：`javac -version`
+
+### 安装mysql
 
 一般网上给出的资料都是
 
@@ -281,7 +436,7 @@ Loading mirror speeds from cached hostfile
 
 处理方式 
 
-##### 安装方式一：安装MaraiDB
+#### 安装方式一：安装MaraiDB
 
 MariaDB数据库管理系统是MySQL的一个分支，主要由开源社区在维护，采用GPL授权许可。开发这个分支的原因之一是：甲骨文公司收购了MySQL后，有将MySQL闭源的潜在风险，因此社区采用分支的方式来避开这个风险。MariaDB的目的是完全兼容MySQL，包括API和命令行，使之能轻松成为MySQL的代替品。
 
@@ -311,7 +466,7 @@ systemctl start mariadb
 
 [![DS68Wn.png](https://s3.ax1x.com/2020/11/13/DS68Wn.png)](https://imgchr.com/i/DS68Wn)
 
-##### 安装方式二直接下载：
+#### 安装方式二直接下载：
 
 使用wget命令直接下载
 
@@ -335,7 +490,7 @@ wget http://dev.mysql.com/get/Downloads/MySQL-5.6/MySQL-5.6.22-1.el6.i686.rpm-bu
 
 [![DSWnUO.png](https://s3.ax1x.com/2020/11/13/DSWnUO.png)](https://imgchr.com/i/DSWnUO)
 
-​升级： `yum  update libstdc++-4.4.7-4.el6.x86_64`
+升级： `yum  update libstdc++-4.4.7-4.el6.x86_64`
 
 再进行对其执行安装命令：
 
@@ -357,7 +512,7 @@ wget http://dev.mysql.com/get/Downloads/MySQL-5.6/MySQL-5.6.22-1.el6.i686.rpm-bu
 
 2、 修改root密码：SET PASSWORD = PASSWORD('123456');
 
-##### 配置mysql
+#### 配置mysql
 
 - 加入到系统服务：`chkconfig --add mysql`
 
@@ -381,7 +536,7 @@ flush privileges;
 >
 > /etc/init.d/iptables status
 ```
-#### 安装tomcat
+### 安装tomcat
 
 直接上传 然后解压
 配置Tomcat环境：
@@ -406,7 +561,7 @@ export CATALINA_HOME
 
 
 这样就可以直接访问了8080断就就可以直接访问了
-#### 安装 maven
+### 安装 maven
 
 ```bash
 wget https://mirrors.cnnic.cn/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz --no-check-certificate
@@ -437,15 +592,200 @@ OS name: "linux", version: "3.10.0-1127.el7.x86_64", arch: "amd64", family: "uni
 [root@localhost java]# 
 ```
 
+### 安装apache 服务
+
+1. 安装apache
+
+   ```
+   yum -y install httpd
+   安装完成后
+   #主配置文件 /etc/httpd/conf/httpd.conf
+   
+   #默认网网站家目录 /var/www/html
+   systemctl start httpd
+   什么都不改的情况下需要在html下一级建一个目录doc 将文件上传访问
+   访问  ip:port/doc/
+   
+   ```
+
+2. 增加认证
+
+   ```
+   1. 新建认证文件 并输入密码
+   sudo htpasswd -c /etc/httpd/.htpasswd apm 
+   2. 如果是在某一个目录下需要认证，则此次目录新建一个文件.htaccess 文件内容如下
+   AuthName "apm"
+   AuthType Basic
+   AuthUserFile /etc/httpd/.htpasswd
+   require user apm
+   3. 在/etc/httpd/conf/httpd.conf 进行配置访问的目录的认证
+   <Directory "/var/www/html/doc/">
+       Options Indexes
+       AllowOverride AuthConfig
+       Order allow,deny
+       Allow from all
+   </Directory>
+   4 重启服务
+   ```
+
+### 安装ftp
+
+1. 下载
+
+   ```
+   # 下载
+   yum -y install vsftpd
+   # 查看状态
+   systemctl status vsftpd
+   ```
+
+2. 配置文件
+
+   ```
+   vim /etc/vsftpd/vsftpd.conf
+   
+   
+   
+   anonymous_enable=NO #禁止匿名用户登录
+   local_enable=YES #允许本地用户登录
+   write_enable=YES #允许用户上传文件
+   chroot_local_user=YES #将用户限制在其主目录下
+   user_sub_token=$USER #为每个用户创建独立的目录
+   local_root=/home/$USER/ftp # FTP用户主目录
+   pasv_min_port=40000 #被动模式最小端口号
+   pasv_max_port=50000 #被动模式最大端口号
+   listen_port=8825 #更改端口号
+   
+   ```
+
+3. 更改根目录
 
 
-### 利用putty来链接服务器传输文件和操作：
+
+1. 更改防火墙配置
+
+```
+sudo firewall-cmd --add-port=8825/tcp
+```
+
+### 跨服务器传输文件
+
+#### rcp 命令
+
+rcp指令用在远端复制文件或目录，如同时指定两个以上的文件或目录，且最后的目的地是一个已经存在的目录，则它会把前面指定的所有文件或目录复制到该目录中。
+
+```
+rcp [-pr][源文件或目录][目标文件或目录]
+```
+
+-p 　保留源文件或目录的属性，包括拥有者，所属群组，权限与时间。
+
+-r 　递归处理，将指定目录下的文件与子目录一并处理。
+
+```
+rcp root@218.6.132.5:./testfile testfile  #复制远程文件到本地  
+rcp root@218.6.132.5:home/rootlocal/testfile testfile  
+```
+
+
+
+#### scp 命令
+
+scp 是 secure copy 的缩写, scp 是 linux 系统下基于 ssh 登陆进行安全的远程文件拷贝命令。
+
+scp 是加密的，[rcp](https://www.runoob.com/linux/linux-comm-rcp.html) 是不加密的，scp 是 rcp 的加强版
+
+```
+scp [-1246BCpqrv] [-c cipher] [-F ssh_config] [-i identity_file]
+[-l limit] [-o ssh_option] [-P port] [-S program]
+[[user@]host1:]file1 [...] [[user@]host2:]file2
+```
+
+**参数说明：**
+
+- -1： 强制scp命令使用协议ssh1
+- -2： 强制scp命令使用协议ssh2
+- -4： 强制scp命令只使用IPv4寻址
+- -6： 强制scp命令只使用IPv6寻址
+- -B： 使用批处理模式（传输过程中不询问传输口令或短语）
+- -C： 允许压缩。（将-C标志传递给ssh，从而打开压缩功能）
+- -p：保留原文件的修改时间，访问时间和访问权限。
+- -q： 不显示传输进度条。
+- -r： 递归复制整个目录。
+- -v：详细方式显示输出。scp和ssh(1)会显示出整个过程的调试信息。这些信息用于调试连接，验证和配置问题。
+- -c cipher： 以cipher将数据传输进行加密，这个选项将直接传递给ssh。
+- -F ssh_config： 指定一个替代的ssh配置文件，此参数直接传递给ssh。
+- -i identity_file： 从指定文件中读取传输时使用的密钥文件，此参数直接传递给ssh。
+- -l limit： 限定用户所能使用的带宽，以Kbit/s为单位。
+- -o ssh_option： 如果习惯于使用ssh_config(5)中的参数传递方式，
+- -P port：注意是大写的P, port是指定数据传输用到的端口号
+- -S program： 指定加密传输时所使用的程序。此程序必须能够理解ssh(1)的选项
+
+##### 从本地复制到远程
+
+**复制文件**
+
+```
+scp local_file remote_username@remote_ip:remote_folder 
+或者 
+scp local_file remote_username@remote_ip:remote_file 
+或者 
+scp local_file remote_ip:remote_folder 
+或者 
+scp local_file remote_ip:remote_file 
+```
+
+- 第1,2个指定了用户名，命令执行后需要再输入密码，第1个仅指定了远程的目录，文件名字不变，第2个指定了文件名；
+- 第3,4个没有指定用户名，命令执行后需要输入用户名和密码，第3个仅指定了远程的目录，文件名字不变，第4个指定了文件名；
+
+**复制目录**
+
+```
+scp -r local_folder remote_username@remote_ip:remote_folder 
+或者 
+scp -r local_folder remote_ip:remote_folder 
+```
+
+- 第1个指定了用户名，命令执行后需要再输入密码；
+- 第2个没有指定用户名，命令执行后需要输入用户名和密码；
+
+
+
+#### 从远程复制到本地
+
+**复制文件**
+
+```
+scp remote_username@remote_ip:remote_folder local_file  
+或者 
+scp remote_username@remote_ip:remote_file  local_file 
+或者 
+scp remote_ip:remote_folder  local_file 
+或者 
+scp remote_ip:remote_file  local_file 
+```
+
+- 第1,2个指定了用户名，命令执行后需要再输入密码，第1个仅指定了远程的目录，文件名字不变，第2个指定了文件名；
+- 第3,4个没有指定用户名，命令执行后需要输入用户名和密码，第3个仅指定了远程的目录，文件名字不变，第4个指定了文件名；
+
+**复制目录**
+
+```
+scp -r remote_username@remote_ip:remote_folder  local_folder 
+或者 
+scp -r remote_ip:remote_folder  local_folder 
+```
+
+- 第1个指定了用户名，命令执行后需要再输入密码；
+- 第2个没有指定用户名，命令执行后需要输入用户名和密码；
+
+## 利用putty来链接服务器传输文件和操作：
 
 ​	去官网直接下载：https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
 
 ​    下载后：点击putty.exe 然后把你的实例的公网IP地址输入就可以直接连上去操作了：
 
-#### 打开psftp:
+### 打开psftp:
 
 ​	首先需要登陆远程服务器：open hostname  然后输入用户名和密码login，进入之后就是类似于 linux的shell命令 比如 `pwd ls cd put get`
 
@@ -456,7 +796,7 @@ OS name: "linux", version: "3.10.0-1127.el7.x86_64", arch: "amd64", family: "uni
 > put filename 用于把本地当前路劲的filename文件上传到remote的当前路径
 > get filename 用于把remote的当前路径的filename文件下载到local的当前路径
 
-#### 文件操作
+### 文件操作
 
 用命令行的形式上传到服务器：本地目录--->目标目录
 
@@ -472,7 +812,7 @@ OS name: "linux", version: "3.10.0-1127.el7.x86_64", arch: "amd64", family: "uni
 
 apache存储目录：
 ```
-​		var/www/execise
+		var/www/execise
 ​		var/www/stuResource
 ```
 spring boot 后台运行命令：
@@ -480,3 +820,6 @@ spring boot 后台运行命令：
 nohup java -jar portal.jar > /root/java/log/portal_log.log 2>&1 &
 ```
 下载的所有的应用程序安装必须放在：usr/local目录下
+
+
+

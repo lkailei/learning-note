@@ -726,13 +726,13 @@ private Integer salary;
 
 HttpMessageConverter<T>接口定义的方法： – Boolean canRead(Class<?> clazz,MediaType mediaType): 指定转换器可以读取的对象类型，即转换器是否可将请求信息转换为 clazz 类型的对象，同时指定支持 MIME 类型(text/html,applaiction/json等)
 
-​`Boolean canWrite(Class<?> clazz,MediaType mediaType):`指定转换器是否可将 clazz 类型的对象写到响应流中，响应流支持的媒体类型在MediaType 中定义。
+`Boolean canWrite(Class<?> clazz,MediaType mediaType):`指定转换器是否可将 clazz 类型的对象写到响应流中，响应流支持的媒体类型在MediaType 中定义。
 
-​`LIst<MediaType> getSupportMediaTypes()：`该转换器支持的媒体类型。
+`LIst<MediaType> getSupportMediaTypes()：`该转换器支持的媒体类型。
 
-​`T  read(Class<? extends T> clazz,HttpInputMessage inputMessage)：`将请求信息流转换为 T 类型的对象。
+`T  read(Class<? extends T> clazz,HttpInputMessage inputMessage)：`将请求信息流转换为 T 类型的对象。
 
-​`void write(T t,MediaType contnetType,HttpOutputMessgae outputMessage)`:将T类型的对象写到响应流中，同时指定相应的媒体类型为 contentType。
+`void write(T t,MediaType contnetType,HttpOutputMessgae outputMessage)`:将T类型的对象写到响应流中，同时指定相应的媒体类型为 contentType。
 
 使用 HttpMessageConverter<T> 将请求信息转化并绑定到处理方法的入参中或将响应结果转为对应类型的响应信息，Spring 提供了两种途径：
 
@@ -881,6 +881,40 @@ public class HandlerInterceptor1 implements HandlerInterceptor {
 </mvc:interceptors>    
 		
 ```
+
+```java
+@Component
+public class WebConfig implements WebMvcConfigurer {
+    @Autowired
+    private HandlerInterceptor1 bizInfoInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(bizInfoInterceptor)
+                .addPathPatterns("/**");
+    }
+
+//    /**
+//     * 通过配置templateService开头的达到指定的路径
+//     *
+//     * @param configurer
+//     */
+//    @Override
+//    public void configurePathMatch(PathMatchConfigurer configurer) {
+//        configurer.addPathPrefix("/templateService", c -> c.isAnnotationPresent(TemplateRestApiController.class))
+//                .addPathPrefix("/planService", c -> c.isAnnotationPresent(PlanRestApiController.class));
+//    }
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@RestController
+public @interface PlanRestApiController {
+}
+
+```
+
+
 
 ### Spring MVC的异常处理：
 

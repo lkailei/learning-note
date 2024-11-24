@@ -61,7 +61,7 @@ public class LambdaTest2 {
                 System.out.print("dddd"+aDouble);
             }
         });
-        ////////////
+        // 消费项的返回一个void
         happyTime(500,money->System.out.print("lambda:" +money));
     }
 
@@ -98,7 +98,9 @@ public class LambdaTest2 {
 }
 ```
 
+##### 闭包
 
+闭包就是一个函数的实例，且它可以无限制的访问那个函数的非本变量，并且可以访问其作用域外的变量。但有限制：他们不能修改lambda中当但的局部变量内同，这些变量必须隐式最终的，可以认为Lambda是对值封闭，而不是对变量封闭。
 
 #### Lambda语法：
 
@@ -510,12 +512,23 @@ Stream的操作三个步骤：1.创建Stream,2,中间操作，3.终止操作、
 
 简单介绍下几个中间方法（filter、map）以及终点方法（collect、sum）
 
-| 方法                | 描述                                                         |
-| ------------------- | ------------------------------------------------------------ |
-| filter(Predicate)   | 接收Lambda,从流中排除某些元素                                |
-| distinct()          | 筛选，通过流生成元素的hashCode()和equals()去除重复元素       |
-| limit(long maxSize) | 截断流，使其不超过给定数量                                   |
-| skip(long n)        | 跳过元素，返回一个扔掉前n个元素的流，若流中元素不足，返回一个空流，与limit(n)互补 |
+| 方法                | 描述                                                         | 类型 | 返回类型    |
+| ------------------- | ------------------------------------------------------------ | ---- | ----------- |
+| filter(Predicate)   | 接收Lambda,从流中排除某些元素                                | 中间 | Stream<T>   |
+| distinct()          | 筛选，通过流生成元素的hashCode()和equals()去除重复元素       | 中间 | Stream<T>   |
+| limit(long maxSize) | 截断流，使其不超过给定数量                                   | 中间 | Stream<T>   |
+| skip(long n)        | 跳过元素，返回一个扔掉前n个元素的流，若流中元素不足，返回一个空流，与limit(n)互补 | 中间 | Stream<T>   |
+| map                 | Function<T,R>  T->R                                          | 中间 | Stream<T>   |
+| floatMap            | Function<T,Stream<R>>  T-->Stream<R>                         | 中间 | Stream<T>   |
+| sorted              | Comparator<T>                                                | 中间 | Stream<T>   |
+| anyMatch            | Predicate<T>                                                 | 终端 | boolean     |
+| allMatch            | Predicate<T>                                                 | 终端 | boolean     |
+| findAny             |                                                              | 终端 | boolean     |
+| findFirst           |                                                              | 终端 | Optional<T> |
+| forEach             | Consumer<T>                                                  | 终端 | void        |
+| collect             |                                                              | 终端 | R           |
+| reduce              |                                                              | 终端 | Optional<T> |
+| count               |                                                              | 终端 | long        |
 
 
 
@@ -655,6 +668,56 @@ System.out.printf("serial: %.2fs, parallel %.2fs%n", (t1 - t0) * 1e-9, (t2 - t1)
 
 应用硬件的并行性在java 7就有了，那就是 java.util.concurrent 包的新增功能之一是一个 fork-join 风格的并行分解框架，同样也很强大高效，有兴趣的同学去研究，这里不详谈了，相比Stream.parallel()这种方式，我更倾向于后者。
 
+##### 归约
+
+归约：将流中的元素反复结和起来得到的一个值，这样的查询可以被归类到归约操作，也可以称为折叠
+
+元素求和
+
+```java
+int sum =0;
+for(int x:nums){
+ sum+=x;
+}
+```
+
+reduce有两个函数可以接收初始值，和无初始值形式。无初始值会返回一个`Optional<Integer>`对象
+
+```
+Optional<Integer> sum = nums.stream().reduce(a,(a,b)->a+b);
+Optional<Integer> sum = nums.stream().reduce((a,b)->a+b);
+```
+
+上面是nums中的元素用加法运算符，反复的迭代处理得到结果。转化为流形式的处理如下
+
+```java
+int sum = nums.stream().reduce(0,(a,b)->a+b);
+// 等同于上面的写法
+int sum = nums.stream().reduce(0,integer::sum);
+```
+
+reduce接收一个参数0，和一个BinaryOperator<T> 将两个元素进行累加。同样可以也可以使用其他的lambda形式的处理
+
+```java
+int sum = nums.stream().reduce(1,(a,b)->a*b);
+```
+
+计算最大最小值
+
+```
+Optional<Integer> sum = nums.stream().reduce((a,b)->a<b?a:b);
+Optional<Integer> sum = nums.stream().reduce(Integer::min);
+Optional<Integer> sum = nums.stream().reduce(Integer::max);
+Optional<Integer> sum = nums.stream().reduce((a,b)->a>b?a:b);
+
+// 并行归约
+Optional<Integer> sum = nums.parallelStream().reduce((a,b)->a>b?a:b);
+```
+
+![1687846225092](C:\Users\L\Nutstore\1\learning-note (1)\note\assets\1687846225092.png)
+
+![1687846243280](C:\Users\L\Nutstore\1\learning-note (1)\note\assets\1687846243280.png)
+
 ### 泛型的改进：
 
 在Java SE 7中，这种方式得以改进，现在你可以使用如下语句进行声明并赋值：
@@ -699,9 +762,18 @@ List.cons(42, List.nil());
 
 目前Java8已经实现了JSR310的全部内容。新增了java.time包定义的类表示了日期-时间概念的规则，包括instants, durations, dates, times, time-zones and periods。这些都是基于ISO日历系统，它又是遵循 Gregorian规则的。最重要的一点是值不可变，且线程安全，通过下面一张图，我们快速看下[java.time](http://download.java.net/jdk8/docs/api/index.html?java/time/package-summary.html)包下的一些主要的类的值的格式，方便理解。
 
-![img](https://wizardforcel.gitbooks.io/java8-new-features/img/f717363f035bc844993ada869f5f73fa.jpg)
-
-![img](https://wizardforcel.gitbooks.io/java8-new-features/img/1cf489dbd3ff50bd434f38b7024a66ee.png)
+```
+LocalDate  2010-12-01
+LocalTime 12:05:30
+LocalDateTime 2020-12-03T11:05:30
+OffsetTime 11:05:30+01:00
+OffsetDateTime 2020-12-03T11:05:30+01:00 
+ZonedDateTime 2020-12-03T11:05:30+01:00 Europe/Paris
+Year  2020
+YearMonth 2020-12
+MonthDay  -12-02
+Instant   
+```
 
 左面是新的api莜面是旧的API
 
@@ -714,6 +786,71 @@ List.cons(42, List.nil());
 | 线程安全      | 非线程安全                    |
 
 日期与时间处理API，在各种语言中，可能都只是个不起眼的API，如果你没有较复杂的时间处理需求，可能只是利用日期与时间处理API取得系统时间，简单做些显示罢了，然而如果认真看待日期与时间，其复杂程度可能会远超过你的想象，天文、地理、历史、政治、文化等因素，都会影响到你对时间的处理。所以在处理时间上，最好选用JSR310（如果你用java8的话就实现310了），或者Joda-Time。
+
+![1687847181723](C:\Users\L\Nutstore\1\learning-note (1)\note\assets\1687847181723.png)
+
+#### Duration&Period类
+
+Duration类通过**年月日时分秒**相结合来描述一个时间量，最高精度是**纳秒**。时间量可以为正也可以为负，比如1天（86400秒0纳秒）、-1天（-86400秒0纳秒）、1年（31556952秒0纳秒）、1毫秒（0秒1000000纳秒）等。
+
+Period类通过**年月日**相结合来描述一个时间量，最高精度是**天**。时间量可以为正也可以为负，例如2年（2年0个月0天）、3个月（0年3个月0天）、4天（0年0月4天）等。
+
+这两个类是不可变的、线程安全的、最终类。都是[JDK8](https://so.csdn.net/so/search?q=JDK8&spm=1001.2101.3001.7020)新增的。
+
+![1687847747727](assets/1687847747727.png)
+
+通过时间单位创建 ofDays(), ofHours(), ofMillis(), ofMinutes(), ofNanos(), ofSeconds()
+
+```
+Duration fromDays = Duration.ofDays(1);
+```
+
+二者的解析方法
+
+```
+Duration fromChar1 = Duration.parse("P1DT1H10M10.5S");
+Duration fromChar2 = Duration.parse("PT10M");
+```
+
+**格式说明**
+
+采用ISO-8601时间格式。格式为：PnYnMnDTnHnMnS   （n为个数）
+
+例如：P1Y2M10DT2H30M15.03S
+
+- P：开始标记
+- 1Y：一年
+- 2M：两个月
+- 10D：十天
+- T：日期和时间的分割标记
+- 2H：两个小时
+- 30M：三十分钟
+- 15S：15.02秒
+
+1. "P", "D", "H", "M" 和 "S"可以是大写或者小写（建议大写）
+2. 可以用“-”表示负数
+
+```
+Period period = Period.parse("P2Y");       //2年
+Period period = Period.parse("P2Y3M5D");   //2年3月5天
+Period period = Period.parse("P1Y2M3W4D"); // 1年2月3周4天。即：1年2月25天
+```
+
+**格式1：“PnYnMnWnD”**
+
+- P：开始符，表示period（即：表示年月日）；
+- Y：year；
+- M：month；
+- W：week；
+- D：day
+
+P, Y, M, W, D都可以用大写或者小写
+
+#### TemporalAdjuster类
+
+![1687847888606](assets/1687847888606.png)
+
+
 
 ### StampedLock解决同步问题
 
@@ -896,8 +1033,561 @@ StampedLock要比ReentrantReadWriteLock更加廉价，也就是消耗比较小�
 5. 当只有少量竞争者的时候，synchronized是一个很好的通用的锁实现;
 6. 当线程增长能够预估，ReentrantLock是一个很好的通用的锁实现;
 
+### Optional
+
+可能包含也可能不包含非空值的容器对象。 如果存在值，则isPresent()将返回true并且get()将返回该值。
+提供了依赖于包含值的存在与否的其他方法，例如orElse() （如果值不存在则返回默认值）和ifPresent() （如果值存在则执行代码块）。
+这是一个基于值的类； 在Optional实例上使用身份敏感操作（包括引用相等性 ( == )、身份哈希码或同步）可能会产生不可预测的结果，应该避免。
+
+**可以结束原来的过多的null的判断**
+
+```java
+if(project!=null){
+	Address address=project.getAddress();
+    if(address!=null){
+    	City city=address.getCity();
+        if(city!=null){
+            // 如果cityName为null就会
+        	String cityName=city.getName()
+            if(cityName!=null){
+            	cityName=cityName.toUpperCase();
+            }   
+        }
+    }
+}
+```
+![1687846571206](C:\Users\L\Nutstore\1\learning-note (1)\note\assets\1687846571206.png)
+
+**使用Optional:**
+
+#### of()&ofNullable()
+**of() **和 **ofNullable() **方法创建包含值的 _Optional_。两个方法的不同之处在于如果你把 _null_ 值作为参数传递进去，**of() **方法会抛出 **NullPointerException**
+
+```java
+// 对象不为null我们可以使用of
+Optional<Project> project=Optional.of(project)
+// 对象可能是null也可能是非null我们使用ofNullable()
+Optional<Project> project=Optional.ofNUllable(project)
+```
+#### isParent():
+`isParent()` 这个方法用于检查是否有值，还接受一个_Consumer(消费者_) 参数，如果对象不是空的，就对执行传入的 Lambda 表达式：
+
+```java
+Optional<Project> opt=Optional.ofNUllable(project)
+opt.ifPresent( u -> assertEquals(user.getEmail(), u.getEmail()));
+```
+#### orElse()&orElseGet()&orElseThrow()
+`orElse()` 如果存在则返回值，否则返回other
+```java
+public T orElse(T other) {
+        return value != null ? value : other;
+    }
+```
+`orElseGet()` 如果存在则返回值，否则调用other并返回该调用的结果
+```java
+public T orElseGet(Supplier<? extends T> other) {
+        return value != null ? value : other.get();
+    }
+```
+`orElseThrow()` 返回包含的值（如果存在），否则抛出由提供的供应商创建的异常
+```java
+public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
+        if (value != null) {
+            return value;
+        } else {
+            throw exceptionSupplier.get();
+```
+#### map()&flatMap()
+如果存在值，则对其应用提供的映射函数，如果结果非空，则返回描述结果的Optional 。 否则返回一个空的Optional 
+例如，以下代码遍历文件名流，选择尚未处理的文件名，然后打开该文件，返回`Optional<FileInputStream>`
+在这里， findFirst返回一个Optional<String> ，然后map为所需文件返回一个`Optional<FileInputStream>`（如果存在)
+```java
+Optional<FileInputStream> fis =
+         names.stream().filter(name -> !isProcessedYet(name))
+                       .findFirst()
+                       .map(name -> new FileInputStream(name))
+```
+`flatMap()` 如果存在一个值，则将提供的Optional承载映射函数应用于它，返回该结果，否则返回一个空的Optional 。 此方法类似于map(Function) ，但提供的映射器的结果已经是Optional ，并且如果调用， flatMap不会用额外的Optional包装它.
+
+#### filter()
+如果存在一个值，并且该值与给定的谓词匹配，则返回一个描述该值的Optional ，否则返回一个空的Optional 
+```java
+Optional<FileInputStream> fis =
+         names.stream().filter(name -> !isProcessedYet(name))
+                       .findFirst()
+                       .map(name -> new FileInputStream(name))
+```
+### Future
+Future表示异步计算的结果。提供了检查计算是否完成、等待其完成以及检索计算结果的方法。结果只能在计算完成后使用方法get检索，必要时阻塞，直到它准备好。取消是通过cancel方法执行的。提供了额外的方法来确定任务是正常完成还是被取消。一旦计算完成，就不能取消计算。如果您想使用Future来取消可取消性但不提供可用的结果，您可以声明Future<?>形式的类型并返回null作为底层任务的结果。
+> 官方实例
+
+```java
+interface ArchiveSearcher { String search(String target); }
+ class App {
+   ExecutorService executor = ...
+   ArchiveSearcher searcher = ...
+   void showSearch(final String target)
+       throws InterruptedException {
+    Future<String> future    = executor.submit(new Callable<String>() {
+    public String call() {
+          return searcher.search(target);
+     }});   
+   displayOtherThings(); // do other things while searching
+try {
+   displayText(future.get()); // use future
+ } catch (ExecutionException ex) { cleanup(); return; }
+}
+```
+当我们提交一个Callable任务后，我们会同时获得一个Future对象，然后，我们在主线程某个时刻调用Future对象的get()方法，就可以获得异步执行的结果。在调用get()时，如果异步任务已经完成，我们就直接获得结果。如果异步任务还没有完成，那么get()会阻塞，直到任务完成后才返回结果。
+```java
+ExecutorService executor = Executors.newFixedThreadPool(4); 
+// 定义任务:
+Callable<String> task = new Task();
+// 提交任务并获得Future:
+Future<String> future = executor.submit(task);
+// 从Future获取异步执行返回的结果:
+String result = future.get(); // 可能阻塞
+```
+#### 方法
+
+- get()：获取结果（可能会等待）
+- get(long timeout, TimeUnit unit)：获取结果，但只等待指定的时间；
+- cancel(boolean mayInterruptIfRunning)：取消当前任务；
+- isDone()：判断任务是否已完成。
 
 
+
+### CompletableFuture
+> 使用Future获得异步执行结果时，要么调用阻塞方法get()，要么轮询看isDone()是否为true，这两种方法都不是很好，因为主线程也会被迫等待。
+
+> 从Java 8开始引入了CompletableFuture，它针对Future做了改进，可以传入回调对象，当异步任务完成或者发生异常时，自动调用回调对象的回调方法。 
+> CompletionStage：执行某一阶段可以向下执行后序阶段，异步执行没有提供Excetuor，默认线程是ForkJoinPool,commonPool().
+
+可以显式完成（设置其值和状态）的Future ，并且可以用作CompletionStage ，支持在完成时触发的依赖功能和操作。当两个或多个线程尝试complete 、 completeExceptionally异常或cancel CompletableFuture 时，只有其中一个成功。除了这些和直接操作状态和结果的相关方法之外
+CompletionStages使用以下策略：
+
+- 为非异步方法的依赖完成提供的操作可以由完成当前 CompletableFuture 的线程执行，或由完成方法的任何其他调用者执行。
+- 所有没有显式 Executor 参数的异步方法都使用ForkJoinPool.commonPool() （除非它不支持至少两个并行级别，在这种情况下，会创建一个新线程来运行每个任务）。 为了简化监控、调试和跟踪，所有生成的异步任务都是标记接口CompletableFuture.AsynchronousCompletionTask实例。
+- 所有 CompletionStage 方法都是独立于其他公共方法实现的，因此一个方法的行为不受子类中其他方法的覆盖的影响。
+
+CompletableFuture 还使用以下策略实现Future ：
+
+- 由于（与FutureTask不同）这个类不能直接控制导致它完成的计算，取消被视为另一种形式的异常完成。 方法cancel与completeExceptionally(new CancellationException())具有相同的效果。 方法isCompletedExceptionally可用于确定 CompletableFuture 是否以任何异常方式完成。
+- 如果出现 CompletionException 异常完成，方法get()和get(long, TimeUnit)抛出一个ExecutionException ，其原因与相应 CompletionException 中的原因相同。 为了在大多数情况下简化使用，此类还定义了join()和getNow ，在这些情况下直接抛出 CompletionException 
+#### ComplatebleFuture异步任务创建方式
+CompletableFuture中创建一个异步任务的方式总归有三种：
+
+- 与之前的FutureTask一样的使用方式，通过new对象完成创建
+- 通过CompletableFuture提供的静态方法完成创建
+- 通过CompletableFuture提供的成员方法完成创建
+##### 创建CompletableFuture对象的方式创建异步任务
+```java
+public class CompletableFutureDemo {
+    public static void main(String[] args) throws Exception {
+        CompletableFuture completableFuture = new CompletableFuture();
+        new Thread(()->{
+            System.out.println("异步任务......");
+            // 执行完成后可以往CompletableFuture对象里面写出返回值
+            completableFuture.complete(Thread.currentThread().getName());
+        }).start();
+        // 主线程获取异步任务执行结果
+        System.out.println("main线程获取执行结果：" + completableFuture.get());
+        for (int i = 1; i <= 3; i++){
+            System.out.println("main线程 - 输出："+i);
+        }
+        
+    }
+   /**
+     *  执行结果：
+     *     异步任务......
+     *     main线程获取执行结果：Thread-0
+     *     main线程 - 输出：1
+     *     main线程 - 输出：2
+     *     main线程 - 输出：3
+     */
+```
+
+这种方式比较简单，也比较容易理解，创建一条线程执行异步操作，执行完成后往completableFuture对象中写入需要返回的值，而主线程则调用completableFuture.get()方法获取异步线程写回的值。单身显而易见，这种方式与之前的FutureTask没任何区别，在主线程获取到执行结果之前，因为任务还在执行，所以主线程会被迫阻塞，等待任务执行结束后才能继续往下执行
+##### 通过CompletableFuture静态方法完成异步任务创建
+CompletableFuture类提供了五个静态方法可以完成创建异步任务的操作，如下：我们常用的runAsync()
+```java
+// 创建不具有返回值的异步任务
+public static CompletableFuture runAsync(Runnable runnable);
+public static CompletableFuture runAsync(Runnable runnable,Executor executor);
+
+// 创建具有返回值的异步任务
+public static  CompletableFuture supplyAsync(Supplier supplier);
+public static  CompletableFuture supplyAsync(Supplier supplier,Executor executor);
+
+// 返回一个值
+public static  CompletableFuture completedFuture(U value);
+
+```
+```java
+CompletableFuture.runAsync(() -> 
+                       messageFeignClient.sendMsgToPersonWithLog(
+                           MessageSendVO.builder()
+                            .title("问题处理提醒")
+                            .msg("您有一条问题待解决:" + question.getName())
+                            .personId()
+                            .build()));
+```
+
+在这四个方法中，run开头的代表创建一个没有返回值的异步任务，supply开头的方法代表创建一个具备返回值的异步任务。同时这两类方法都支持指定执行线程池，如果不指定执行线程池，CompletableFuture则会默认使用ForkJoinPool.commonPool()线程池内的线程执行创建出的异步任务。
+
+> 创建一个异步任务完成100内的偶数求和，执行完成后返回求和结果，代码如下：
+
+```java
+public class TestCompletableFuture {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        CompletableFuture<String> supply =
+            CompletableFuture.supplyAsync(TestCompletableFuture::mock);
+        // 执行成功回调
+        supply.thenAccept(System.out::println);
+         // 执行过程出现异常
+        supply.exceptionally((throwable) -> {throwable.printStackTrace(); return "异步任务执行过程出现异常...";});
+        // 主线程操作
+        for (int i=1;i<=10;i++){
+            System.out.println("main线程："+i);
+            Thread.sleep(1000);
+        }
+    }
+    // 求和100内的偶数
+    private static String mock() {
+        int sum = 0;
+        System.out.println("模拟异步执行开始！");
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (int i = 1; i <= 100; i++) {
+            if (i % 2 == 0) sum += i;
+        }
+        System.out.println("模拟异步执行完毕！");
+        return Thread.currentThread().getName()+"线程 - 100内偶数之和："+sum;
+    }
+    /**
+     * 执行结果：
+     *    模拟异步执行开始！
+            main线程：1
+            模拟异步执行完毕！
+            ForkJoinPool.commonPool-worker-9线程-100之内的偶数之和为：2550
+            main线程：2
+            main线程：3
+            main线程：4
+            main线程：5
+            main线程：6
+            main线程：7
+            main线程：8
+            main线程：9
+            main线程：10  
+     **/
+    
+}
+```
+
+如上案例，通过了CompletableFuture.supplyAsync创建了一个带返回值的异步任务supply，因为没有指定线程池则使用默认的ForkJoinPool.commonPool()线程池来完成该任务的执行，同时采用supply.thenAccept作为成功的回调方法，采用supply.exceptionally作为执行过程中抛出异常时的回调方法，同时主线程main创建完成异步任务后，写好了成功和失败的回调函数后，继续执行打印1、2、3、4...的逻辑。从上面的执行结果我们可以看出，当main线程创建好异步任务以及相关后续处理后，其实并没有阻塞等待任务的完成，而是继续执行接下来的逻辑，当任务执行结束时则会触发提前定义好的回调函数，返回任务执行结果(执行出现异常则会将捕获的异常信息返回给exceptionally回调函数)。显而易见，CompletableFuture任务对比之前的FutureTask任务，在执行上以及执行结果返回上实现了真正意义上的“异步”。
+
+接下来再看看其他几种创建CompletableFuture异步任务的静态方法使用。如下：
+
+> 创建一个没有返回值的异步任务
+
+public static CompletableFuture runAsync(Runnable runnable,Executor executor);
+> 创建有返回值的异步任务
+
+public static  CompletableFuture supplyAsync(Supplier supplier);
+public static  CompletableFuture supplyAsync(Supplier supplier,Executor executor);
+> 返回已使用给定值完成的新 CompletableFuture。
+
+public static  CompletableFuture completedFuture(U value);
+> 创建一个收集所有的CompletableFuture的future
+> 此方法的应用之一是在继续程序之前等待一组独立的 CompletableFuture 完成
+
+public static CompletableFuture<Void> allOf(CompletableFuture<?>... cfs) ;
+
+```java
+   public class CompletableFutureDemo {
+      public static void main(String[] args) throws Exception {
+          
+       /***************************supplyAsync***************************/
+        // 创建有返回值的异步任务
+        CompletableFuture supplyCF = CompletableFuture
+        .supplyAsync(CompletableFutureDemo::evenNumbersSum);
+        // 执行成功的回调
+        supplyCF.thenAccept(System.out::println);
+        // 执行过程中出现异常的回调
+        supplyCF.exceptionally((e)->{
+        e.printStackTrace();
+        return "异步任务执行过程中出现异常....";
+        });
+        // 主线程执行打印1234...操作
+        // 因为如果不为CompletableFuture指定线程池执行任务的情况下，
+        // CompletableFuture默认是使用ForkJoinPool.commonPool()的线程
+        // 同时是作为main线程的守护线程进行的，如果main挂了，执行异步任
+        // 务的线程也会随之终止结束，并不会继续执行异步任务
+        for (int i = 1; i <= 10; i++){
+        System.out.println("main线程 - 输出："+i);
+        Thread.sleep(50);
+		}
+          
+    /***********************completedFuture****************************/
+    
+    // 创建一个异步任务，已经给定返回值了
+    CompletableFuture c = CompletableFuture.completedFuture("竹子");
+    c.thenApply(r -> {
+        System.out.println("上个任务结果："+r);
+        return r+"...熊猫";
+    });
+    c.thenAccept(System.out::println);
+    
+    /***********************runAsync****************************/
+
+    // 创建一个没有返回值的异步任务
+    CompletableFuture runCF = CompletableFuture.runAsync(()->{
+        System.out.println(Thread.currentThread().getName()+"没有返回值的异步任务");
+    });
+    
+    /*************************supplyAsync具有executor**************************/
+    
+    // 创建单例的线程池
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    // 创建一个有返回值的异步任务并指定执行的线程池
+    CompletableFuture<String> supplyCFThreadPool =
+            CompletableFuture.supplyAsync(CompletableFutureDemo::oddNumbersSum,executor);
+    // // 执行过程中出现异常的回调
+    supplyCFThreadPool.thenAccept(System.out::println);
+    // 执行过程中出现异常的回调
+    supplyCF.exceptionally((e)->{
+        e.printStackTrace();
+        return "异步任务执行过程中出现异常....";
+    });
+    
+    // 关闭线程池
+    executor.shutdown();
+  }
+
+    // 求和100内的偶数
+    private static String evenNumbersSum() {
+        int sum = 0;
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (int i = 1; i <= 100; i++) {
+            if (i % 2 == 0) sum += i;
+        }
+        return Thread.currentThread().getName()+"线程 - 100内偶数之和："+sum;
+    }
+
+    // 求和100内的奇数
+    private static String oddNumbersSum() {
+        int sum = 0;
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (int i = 1; i <= 100; i++) {
+            if (i % 2 != 0) sum += i;
+        }
+        return Thread.currentThread().getName()+"线程 - 100内奇数之和："+sum;
+    }
+}
+```
+
+在上述的案例中，分别创建了四个异步任务，第一个则是前面分析的案例，不再赘述。
+
+1. 第二个则是创建了一个有返回值的异步任务，同时与第一个任务不同的是：我们指定执行的线程池executor，那么该任务在执行的时候则不会使用默认的ForkJoinPool.commonPool()线程池，不过在使用这种方式的时候，一定要记住需要关闭自己创建的线程池。
+2. 第三个异步任务则是通过CompletableFuture.runAsync方法创建了一个没有返回值的异步任务，传递的参数是一个Runnable对象，与最开始的new Thread()方式区别不大，但是与之不同的是：该任务的执行因为没有指定线程池，所以也是通过默认的ForkJoinPool.commonPool()线程池执行的，而不会另起线程执行。
+3. 第四个任务则是创建了一个已经提前指定了返回值的CompletableFuture任务，很多人可能会感觉这种方式很鸡肋，但是可以配合CompletableFuture成员方法完成链式创建。
+
+##### 通过CompletableFuture成员方法完成异步任务创建
+
+在使用这种方式创建任务的前提是需要建立在已经创建出一个CompletableFuture对象上。总归来说这类成员方法创建异步任务的方式属于串行化的形式创建的，下一个任务依赖于上一个任务的执行结果时，就可以采用这种方式。CompletableFuture中提供很多这类方法：
+![1650956141(1).png](https://cdn.nlark.com/yuque/0/2022/png/1500329/1650956126977-38d80089-47d7-4409-995f-6377d9ace041.png#clientId=ufd4a8a70-88c8-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=889&id=u3094d6fb&margin=%5Bobject%20Object%5D&name=1650956141%281%29.png&originHeight=1111&originWidth=1104&originalType=binary&ratio=1&rotation=0&showTitle=false&size=139821&status=done&style=none&taskId=u3509f082-3954-4618-aa2b-7ed5e359ec2&title=&width=883.2)
+
+如上列出来了一些常用的方法，方法总体分为四类，这四类方法都可以使得任务串行化执行：
+
+- thenApply类：此类方法可以基于上一个任务再创建一个新的有返回型任务。
+- handle类：与thenApply类作用相同，不同点在于thenApply类方法只能在上一个任务执行正常的情况下才能执行，当上一个任务执行抛出异常后则不会执行。而handle类在上个任务出现异常的情况下也可以接着执行。
+- thenRun类：此类方法可以基于上一个任务再创建一个新的无返回型任务。
+- thenCompose类：与thenApply类大致相同，不同点在于每次向下传递都是新的CompletableFuture对象，而thenApply向下传递的都是同一个CompletableFuture对象对象
+- thenAccept类：获取执行异步成功(supplyAsync())的回调
+
+但是不难发现，不管是哪类方法，其实方法名都会有后面跟了Async的和没跟Async的，那么这种跟了Async代表什么意思呢？如果调用方法名不带Async的方法创建出的任务都是由上一个任务的执行线程来执行的，在上一个任务没有执行完成的情况下，当前创建出来的任务会等待上一个任务执行完成后再执行。而如果是通过Async这类方法创建出来的任务则不受到这个限制，通过调用方法名带Async的方法创建出的任务，具体的执行线程会根据实际情况来决定，主要会分为如下三种情况：
+
+- 上一个任务已经执行结束了，那么当前创建出的任务会交给上个任务的执行线程来执行
+- 上一个任务还没有执行结束，那么则会另启一条线程来执行
+- 如果创建任务时指定了执行线程池，则会使用指定线程池的线程来执行
+
+```java
+public class CompletableFutureDemo {
+    public static void main(String[] args) throws Exception {
+        CompletableFuture cf =
+                CompletableFuture.supplyAsync(CompletableFutureDemo::evenNumbersSum)
+                    // 链式编程：基于上个任务的返回继续执行新的任务
+                    .thenApply(r -> {
+                        System.out.println("获取上个任务的执行结果：" + r);
+                        // 通过上个任务的执行结果完成计算：求和100所有数
+                        return r + oddNumbersSum();
+                    }).thenApplyAsync(r -> {
+                        System.out.println("获取上个任务的执行结果：" + r);
+                        Integer i = r / 0; // 拋出异常
+                        return r;
+                    }).handle((param, throwable) -> {
+                        if (throwable == null) {
+                            return param * 2;
+                        }
+                        // 获取捕获的异常
+                        System.out.println(throwable.getMessage());
+                        System.out.println("我可以在上个任务" +
+                                "抛出异常时依旧执行....");
+                        return -1;
+                    }).thenCompose(x -> 
+                        CompletableFuture.supplyAsync(() -> x+1
+                    )).thenRun(() -> {
+                        System.out.println("我是串行无返回任务....");
+                });
+
+        // 主线程执行休眠一段时间
+        // 因为如果不为CompletableFuture指定线程池执行任务的情况下，
+        // CompletableFuture默认是使用ForkJoinPool.commonPool()的线程
+        // 同时是作为main线程的守护线程进行的，如果main挂了，执行异步任
+        // 务的线程也会随之终止结束，并不会继续执行异步任务
+        Thread.sleep(2000);
+    }
+// 求和100内的偶数
+private static int evenNumbersSum() {
+    int sum = 0;
+    try {
+        Thread.sleep(100);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    for (int i = 1; i <= 100; i++) {
+        if (i % 2 == 0) sum += i;
+    }
+    return sum;
+}
+
+// 求和100内的奇数
+private static int oddNumbersSum() {
+    int sum = 0;
+    try {
+        Thread.sleep(100);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    for (int i = 1; i <= 100; i++) {
+        if (i % 2 != 0) sum += i;
+    }
+    return sum;
+}
+}
+```
+
+在案例中，我们创建了六个异步任务：
+
+1. 求和100内的所有偶数
+2. 基于第一个任务的结果再加上100内奇数总值计算100内所有数字的总和
+3. 基于第二个任务的结果除0抛出一个异常
+4. 使用handle创建一个可以在上个任务抛出异常时依旧执行的任务
+5. 使用thenCompose创建一个基于上个任务返回值+1的任务
+6. 使用thenRun创建了一个没有返回值的任务
+##### 串行执行
+**如果只是实现了异步回调机制，我们还看不出CompletableFuture相比Future的优势。CompletableFuture更强大的功能是，多个CompletableFuture可以串行执行，例如，定义两个CompletableFuture，第一个CompletableFuture根据证券名称查询证券代码，第二个CompletableFuture根据证券代码查询证券价格，这两个CompletableFuture实现串行操作如下：**
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        // 第一个任务:
+        CompletableFuture<String> cfQuery = CompletableFuture.supplyAsync(() -> {
+            return queryCode("中国石油");
+        });
+        // cfQuery成功后继续执行下一个任务:
+        CompletableFuture<Double> cfFetch = cfQuery.thenApplyAsync((code) -> {
+            return fetchPrice(code);
+        });
+        // cfFetch成功后打印结果:
+        cfFetch.thenAccept((result) -> {
+            System.out.println("price: " + result);
+        });
+        // 主线程不要立刻结束，否则CompletableFuture默认使用的线程池会立刻关闭:
+        Thread.sleep(2000);
+    }
+
+    static String queryCode(String name) {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+        return "601857";
+    }
+
+    static Double fetchPrice(String code) {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+        return 5 + Math.random() * 20;
+    }
+}
+```
+##### 并行执行
+同时从新浪和网易查询证券代码，只要任意一个返回结果，就进行下一步查询价格，查询价格也同时从新浪和网易查询，只要任意一个返回结果，就完成操作：
+```java
+public class Main {
+    public static void main(String[] args) throws Exception {
+        // 两个CompletableFuture执行异步查询:
+        CompletableFuture<String> cfQueryFromSina = CompletableFuture.supplyAsync(() -> {
+            return queryCode("中国石油", "https://finance.sina.com.cn/code/");
+        });
+        CompletableFuture<String> cfQueryFrom163 = CompletableFuture.supplyAsync(() -> {
+            return queryCode("中国石油", "https://money.163.com/code/");
+        });
+
+        // 用anyOf合并为一个新的CompletableFuture:
+        CompletableFuture<Object> cfQuery = CompletableFuture.anyOf(cfQueryFromSina, cfQueryFrom163);
+
+        // 两个CompletableFuture执行异步查询:
+        CompletableFuture<Double> cfFetchFromSina = cfQuery.thenApplyAsync((code) -> {
+            return fetchPrice((String) code, "https://finance.sina.com.cn/price/");
+        });
+        CompletableFuture<Double> cfFetchFrom163 = cfQuery.thenApplyAsync((code) -> {
+            return fetchPrice((String) code, "https://money.163.com/price/");
+        });
+
+        // 用anyOf合并为一个新的CompletableFuture:
+        CompletableFuture<Object> cfFetch = CompletableFuture.anyOf(cfFetchFromSina, cfFetchFrom163);
+
+        // 最终结果:
+        cfFetch.thenAccept((result) -> {
+            System.out.println("price: " + result);
+        });
+        // 主线程不要立刻结束，否则CompletableFuture默认使用的线程池会立刻关闭:
+        Thread.sleep(200);
+    }
+
+    static String queryCode(String name, String url) {
+        System.out.println("query code from " + url + "...");
+        try {
+            Thread.sleep((long) (Math.random() * 100));
+        } catch (InterruptedException e) {
+        }
+        return "601857";
+    }
+
+    static Double fetchPrice(String code, String url) {
+        System.out.println("query price from " + url + "...");
+        try {
+            Thread.sleep((long) (Math.random() * 100));
+        } catch (InterruptedException e) {
+        }
+        return 5 + Math.random() * 20;
+    }
+}
+```
 
 
 

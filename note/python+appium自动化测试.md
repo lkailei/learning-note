@@ -475,13 +475,13 @@ activity:是所有的流程运行的基础，activity可以包含多个组件
 
 ### Monkey
 
-####简介
+#### 简介
 
 Monkey就是猴子，  Monkey测试，就像一只猴子， 在电脑面前，乱敲键盘在测试。  猴子什么都不懂， 只知道乱敲通过Monkey程序模拟用户触摸屏幕、滑动Trackball、 按键等操作来对设备上的程序进行压力测试，检测程序多久的时间会发生异常
 
 Monkey 主要用于Android 的压力测试  自动的一个压力测试小工具， 主要目的就是为了测试app 是否会Crash.
 
-####程序介绍（启动步骤）
+#### 程序介绍（启动步骤）
 
 （1） Monkey程序由Android系统自带，使用Java诧言写成，在Android文件系统中的存放路径是： /system/framework/monkey.jar；   
 （2） Monkey.jar程序是由一个名为“monkey”的Shell脚本来启动执行，shell脚本在Android文件系统中 的存放路径是：/system/bin/monkey；  
@@ -562,7 +562,7 @@ Monkeyrunner：Monkeyrunner工具是在工作站上通过API定义的特定命�
 
 4.配置platform-tools路径
 
-######Monkeyrunner API
+###### Monkeyrunner API
 
 主要包括三个模块
 

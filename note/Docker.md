@@ -1,4 +1,6 @@
- # Docker
+
+
+# Docker
 
 
 
@@ -76,10 +78,14 @@ ubuntu安装：
 
 ### ubuntu脚本自动安装：
 
-- `curl -fsSL get.docker.com -o get-docker.sh`
-- `sh get-docker.sh --mirror Aliyun` 
-  ​			或者第二步使用：`sudo sh get-docker.sh --mirror AzureChinaCloud`
-- 测试是否安装成功：`docker version`
+```
+curl -fsSL get.docker.com -o get-docker.sh
+    这句命令会在当前文件夹下下载一个get-docker.sh的脚本，就是get.docker.com的访问结果
+sh get-docker.sh --mirror Aliyun
+    执行脚本，并将镜像源改为阿里的镜像源
+    
+docker version    
+```
 
 ### ubuntu安装镜像加速器：
 
@@ -129,7 +135,64 @@ ubuntu安装：
 systemctl daemon-reload && systemctl restart docker
 ```
 
+## 修改docker 默认储存位置
 
+### 方式一
+
+```
+默认情况下Docker的存放位置为：/var/lib/docker
+
+可以通过下面命令查看具体位置：
+
+sudo docker info | grep "Docker Root Dir"
+
+首先停掉Docker服务：
+
+systemctl restart docker或者service docker stop
+
+然后移动整个/var/lib/docker目录到目的路径：
+
+mv /var/lib/docker /data/docker
+
+做一个软连接
+ln -s /root/data/docker /var/lib/docker
+这时候启动Docker时发现存储目录依旧是/var/lib/docker，但是实际上是存储在数据盘的，你可以在数据盘上看到容量变化。
+```
+
+### 方法二、修改镜像和容器的存放路径
+
+```
+指定镜像和容器存放路径的参数是--graph=/var/lib/docker，我们只需要修改配置文件指定启动参数即可。
+
+Docker 的配置文件可以设置大部分的后台进程参数，在各个操作系统中的存放位置不一致，在 Ubuntu 中的位置是：/etc/default/docker，在 CentOS 中的位置是：/etc/sysconfig/docker。
+
+如果是 CentOS6 则添加下面这行：
+
+OPTIONS=--graph="/root/data/docker" --selinux-enabled -H fd://
+
+如果是 Ubuntu 则添加下面这行（因为 Ubuntu 默认没开启 selinux）：
+
+OPTIONS=--graph="/root/data/docker" -H fd://# 或者DOCKER_OPTS="-g /root/data/docker"
+
+最后重新启动，Docker 的路径就改成 /root/data/docker 了。
+
+centos7下，也可以
+
+修改docker.service文件，使用-g参数指定存储位置
+
+vi /usr/lib/systemd/system/docker.service  
+
+ExecStart=/usr/bin/dockerd --graph /new-path/docker 
+
+ // reload配置文件 
+
+systemctl daemon-reload 
+
+// 移动之前的数据
+mv /var/lib/docker /data/docker
+ // 重启docker 
+ systemctl restart docker.service
+```
 
 ## DockerFile：
 
@@ -468,7 +531,7 @@ eg : `docker run –name myredis –d redis`
 
 ​	实际上，这些镜像也没必要删除，因为之前说过，相同的层只会存一遍，而这些镜像是别的镜像的依赖，因此并不会因为它们被列出来而多存了一份，无论如何你也会需要它们	
 
-​`	docker image ls` 还支持强大的过滤器参数 `--filter`，或者简写 `-f`。之前我们已经看到了使用过滤器来列出虚悬镜像的用法，它还有更多的用法。比如，我们希望看到在` mongo:3.2` 之后建立的镜像					
+`	docker image ls` 还支持强大的过滤器参数 `--filter`，或者简写 `-f`。之前我们已经看到了使用过滤器来列出虚悬镜像的用法，它还有更多的用法。比如，我们希望看到在` mongo:3.2` 之后建立的镜像					
 
 ```
 $ docker image ls -f since=mongo:3.2  
@@ -798,7 +861,7 @@ build的命令：
     --service-ports 配置服务端口并映射到本地主机。
     -T 不分配伪 tty，意味着依赖 tty 的指令将无法运行。
     start,stop,top,pause,port 和docker中的使用的都一样
-```          
+```
 前台运行：`docker-compose up`
 
 后台运行： `docker-compose up -d`
@@ -808,6 +871,9 @@ build的命令：
 停止：`docker-compose stop`
 
 停止并移除容器：`docker-compose down`
+
+启动指定的文件：`docker-compose  -f dc-base.yaml up -d` 
+
 
 **开机自启：**
 
@@ -819,7 +885,9 @@ vim /etc/rc.d/rc.local
 /usr/local/bin/docker-compose -f /www/docker/trace_fecshop/docker-compose.yml up -d
 ```
 
+####   Docker 命令转docker-compose
 
+[docker命令转docker-compose](https://www.composerize.com/)
 
 ### Docker compose实战Nginx
 
@@ -1528,7 +1596,132 @@ i18n.locale: "zh-CN"
 
 [![29j7Dg.png](https://z3.ax1x.com/2021/05/26/29j7Dg.png)](https://imgtu.com/i/29j7Dg)
 
-###  Docker compose編排容器
+### Docker Compose 实战 onlyoffice
+
+```yaml
+version: '3.3'
+services:
+    documentserver:
+        ports:
+            - '8085:80'
+        restart: always
+        volumes:
+            - '/app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice'
+            - '/app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data'
+            - '/app/onlyoffice/DocumentServer/lib:/var/lib/onlyoffice'
+            - '/app/onlyoffice/DocumentServer/db:/var/lib/postgresql'
+        image: 'onlyoffice/documentserver:7.0'
+```
+
+上面版本rabbitmq链接不上，我们直接使用下面的脚本进行处理
+
+```yaml
+version: '3'
+services:
+  onlyoffice-documentserver:
+    image: 'onlyoffice/documentserver:7.0'
+    build:
+      context: .
+    container_name: onlyoffice-documentserver
+    depends_on:
+      - onlyoffice-postgresql
+      - onlyoffice-rabbitmq
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=onlyoffice-postgresql
+      - DB_PORT=5432
+      - DB_NAME=onlyoffice
+      - DB_USER=onlyoffice
+      - AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
+      # Uncomment strings below to enable the JSON Web Token validation.
+      #- JWT_ENABLED=true
+      #- JWT_SECRET=secret
+      #- JWT_HEADER=Authorization
+      #- JWT_IN_BODY=true
+    ports:
+      - '8088:80'
+      - '443:443'
+    stdin_open: true
+    restart: always
+    stop_grace_period: 60s
+    volumes:
+      - /var/www/onlyoffice/Data
+      - /var/log/onlyoffice
+      - /var/lib/onlyoffice/documentserver/App_Data/cache/files
+      - /var/www/onlyoffice/documentserver-example/public/files
+      - /usr/share/fonts
+
+  onlyoffice-rabbitmq:
+    container_name: onlyoffice-rabbitmq
+    image: rabbitmq
+    restart: always
+    expose:
+      - '5672'
+    ports:
+      - '5672:5672'
+
+  onlyoffice-postgresql:
+    container_name: onlyoffice-postgresql
+    image: postgres:9.5
+    environment:
+      - POSTGRES_DB=onlyoffice
+      - POSTGRES_USER=onlyoffice
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    restart: always
+    expose:
+      - '5432'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgresql_data:/var/lib/postgresql
+
+volumes:
+  postgresql_data:
+```
+
+
+
+![1684938935615](C:\Users\kay三石\AppData\Roaming\Typora\typora-user-images\1684938935615.png)
+
+### Docker Compose 实战mysql8.0
+
+```yaml
+version: '3'
+services:
+  mysql:
+    image: mysql:8.0 
+    container_name: mysql-8.0
+    environment:
+      #密码设置
+      - MYSQL_ROOT_PASSWORD=12345678
+      - TZ=Asia/Shanghai
+      - SET_CONTAINER_TIMEZONE=true
+      - CONTAINER_TIMEZONE=Asia/Shanghai
+    volumes:
+      # 前面宿主机目录，后面容器内目录(宿主机没有的目录会自动创建)
+      - ./data/mysql-8.0/conf:/etc/mysql/conf.d 
+      - ./data/mysql-8.0/data:/var/lib/mysql
+      -./data/mysql-8.0/logs:/var/log/mysql
+    ports:
+      # 前面宿主机目录，后面容器内目录
+      - 3306:3306
+    command:
+      # 将mysql8.0默认密码策略 修改为 原先 策略 (mysql8.0对其默认策略做了更改 会导致密码无法匹配)
+      # --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    restart: always
+```
+
+
+
+### Docker Compose 实战 nacos 2.0
+
+
+
+### Docker compose編排容器
 
 一般使用先进行安装环境然后通过docker-compose.yml进行编排启动各个服务。
 

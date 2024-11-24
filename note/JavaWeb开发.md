@@ -1,3 +1,39 @@
+## Web概述
+
+### Web资源
+
+- 静态web资源：内容是静态的，不同的人在不同的时间来访问时都是相同的内容。 静态资源开发技术：HTML、CSS、JS
+- 动态web资源：内容是由程序生成的，不同的人在不同的时间访问的内容很可能是不同的。常见的动态web资源开发技术：ASP、PHP、JSP/Servlet java中动态资源开发技术统称为javaweb
+
+### Web服务器
+
+	- WebLogic
+	- WebSphere
+	- Apache TOMCAT
+	- JBoss
+
+#### Apache Tomcat
+
+http://tomcat.apache.org/
+
+![1702088463264](assets/1702088463264.png)
+
+​		
+
+### WEB 应用程序
+
+- WEB应用程序指供浏览器访问的程序，通常也简称为web应用，是为了提供某一特定功能而按照一定方式组织起来的web资源的组合。
+
+- 一个web应用由多个静态web资源和动态web资源组成，如:
+  - html、css、js文件
+  - Jsp文件、java程序、支持jar包、
+  - 配置文件
+  - 一个web应用所使用的web资源我们通常使用目录进行组织，这个目录我们通常称为 web应用所在的目录
+
+- Web应用开发好后，若想供外界访问，需要把web应用所在目录交给web服务器管理，这个过程称之为虚似目录的映射。
+
+
+
 ## HTTP
 
 ### Http简介
@@ -51,6 +87,41 @@ GET /books/java.html HTTP/1.1  请求方式 请求的资源名 所遵循的协�
 	Cookie 会在后面讲会话技术的时候单讲
 	Connection: close/Keep-Alive 指定是否继续保持连接
 	Date: Tue, 11 Jul 2000 18:23:51 GMT 当前时间
+#### 请求头
+
+| Header              | 解释                                                         | 示例                                                    |
+| :------------------ | :----------------------------------------------------------- | :------------------------------------------------------ |
+| Accept              | 指定客户端能够接收的内容类型                                 | Accept: text/plain, text/html                           |
+| Accept-Charset      | 浏览器可以接受的字符编码集。                                 | Accept-Charset: iso-8859-5                              |
+| Accept-Encoding     | 指定浏览器可以支持的web服务器返回内容压缩编码类型。          | Accept-Encoding: compress, gzip                         |
+| Accept-Language     | 浏览器可接受的语言                                           | Accept-Language: en,zh                                  |
+| Accept-Ranges       | 可以请求网页实体的一个或者多个子范围字段                     | Accept-Ranges: bytes                                    |
+| Authorization       | HTTP授权的授权证书                                           | Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==       |
+| Cache-Control       | 指定请求和响应遵循的缓存机制                                 | Cache-Control: no-cache                                 |
+| Connection          | 表示是否需要持久连接。（HTTP 1.1默认进行持久连接）           | Connection: close                                       |
+| Cookie              | HTTP请求发送时，会把保存在该请求域名下的所有cookie值一起发送给web服务器。 | Cookie: $Version=1; Skin=new;                           |
+| Content-Length      | 请求的内容长度                                               | Content-Length: 348                                     |
+| Content-Type        | 请求的与实体对应的MIME信息                                   | Content-Type: application/x-www-form-urlencoded         |
+| Date                | 请求发送的日期和时间                                         | Date: Tue, 15 Nov 2010 08:12:31 GMT                     |
+| Expect              | 请求的特定的服务器行为                                       | Expect: 100-continue                                    |
+| From                | 发出请求的用户的Email                                        | From: user@email.com                                    |
+| Host                | 指定请求的服务器的域名和端口号                               | Host: www.zcmhi.com                                     |
+| If-Match            | 只有请求内容与实体相匹配才有效                               | If-Match: “737060cd8c284d8af7ad3082f209582d”            |
+| If-Modified-Since   | 如果请求的部分在指定时间之后被修改则请求成功，未被修改则返回304代码 (Modified-Since) | If-Modified-Since: Sat, 29 Oct 2010 19:43:31 GMT        |
+| If-None-Match       | 如果内容未改变返回304代码，参数为服务器先前发送的Etag，与服务器回应的Etag比较判断是否改变 | If-None-Match: “737060cd8c284d8af7ad3082f209582d”       |
+| If-Range            | 如果实体未改变，服务器发送客户端丢失的部分，否则发送整个实体。参数也为Etag | If-Range: “737060cd8c284d8af7ad3082f209582d”            |
+| If-Unmodified-Since | 只在实体在指定时间之后未被修改才请求成功                     | If-Unmodified-Since: Sat, 29 Oct 2010 19:43:31 GMT      |
+| Max-Forwards        | 限制信息通过代理和网关传送的时间                             | Max-Forwards: 10                                        |
+| Pragma              | 用来包含实现特定的指令                                       | Pragma: no-cache                                        |
+| Proxy-Authorization | 连接到代理的授权证书                                         | Proxy-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ== |
+| Range               | 只请求实体的一部分，指定范围                                 | Range: bytes=500-999                                    |
+| Referer             | 先前网页的地址，当前请求网页紧随其后,即来路                  | Referer: http://www.zcmhi.com/archives/71.html          |
+| TE                  | 客户端愿意接受的传输编码，并通知服务器接受接受尾加头信息     | TE: trailers,deflate;q=0.5                              |
+| Upgrade             | 向服务器指定某种传输协议以便服务器进行转换（如果支持）       | Upgrade: HTTP/2.0, SHTTP/1.3, IRC/6.9, RTA/x11          |
+| User-Agent          | User-Agent的内容包含发出请求的用户信息                       | User-Agent: Mozilla/5.0 (Linux; X11)                    |
+| Via                 | 通知中间网关或代理服务器地址，通信协议                       | Via: 1.0 fred, 1.1 nowhere.com (Apache/1.1)             |
+| Warning             | 关于消息实体的警告信息                                       | Warn: 199 Miscellaneous warning                         |
+
 ### Http响应
 
 **一个HTTP响应代表服务器向客户端回送的数据**，它包括： 一个状态行、若干消息头、以及实体内容 。
@@ -94,7 +165,42 @@ HTTP/1.1 200 OK
 	以上三个头都是用来控制缓存的，是因为历史原因造成的，不同的浏览器认识不同的头，我们通常三个一起使用保证通用性。
 	Connection: close/Keep-Alive   是否保持连接
 	Date: Tue, 11 Jul 2000 18:23:51 GMT 当前时间
+
+
 [![cetf4P.png](https://z3.ax1x.com/2021/04/02/cetf4P.png)](https://imgtu.com/i/cetf4P)
+
+
+
+| Header             | 解释                                                         | 示例                                                  |
+| :----------------- | :----------------------------------------------------------- | :---------------------------------------------------- |
+| Accept-Ranges      | 表明服务器是否支持指定范围请求及哪种类型的分段请求           | Accept-Ranges: bytes                                  |
+| Age                | 从原始服务器到代理缓存形成的估算时间（以秒计，非负）         | Age: 12                                               |
+| Allow              | 对某网络资源的有效的请求行为，不允许则返回405                | Allow: GET, HEAD                                      |
+| Cache-Control      | 告诉所有的缓存机制是否可以缓存及哪种类型                     | Cache-Control: no-cache                               |
+| Content-Encoding   | web服务器支持的返回内容压缩编码类型。                        | Content-Encoding: gzip                                |
+| Content-Language   | 响应体的语言                                                 | Content-Language: en,zh                               |
+| Content-Length     | 响应体的长度                                                 | Content-Length: 348                                   |
+| Content-Location   | 请求资源可替代的备用的另一地址                               | Content-Location: /index.htm                          |
+| Content-MD5        | 返回资源的MD5校验值                                          | Content-MD5: Q2hlY2sgSW50ZWdyaXR5IQ==                 |
+| Content-Range      | 在整个返回体中本部分的字节位置                               | Content-Range: bytes 21010-47021/47022                |
+| Content-Type       | 返回内容的MIME类型                                           | Content-Type: text/html; charset=utf-8                |
+| Date               | 原始服务器消息发出的时间                                     | Date: Tue, 15 Nov 2010 08:12:31 GMT                   |
+| ETag               | 请求变量的实体标签的当前值                                   | ETag: “737060cd8c284d8af7ad3082f209582d”              |
+| Expires            | 响应过期的日期和时间                                         | Expires: Thu, 01 Dec 2010 16:00:00 GMT                |
+| Last-Modified      | 请求资源的最后修改时间                                       | Last-Modified: Tue, 15 Nov 2010 12:45:26 GMT          |
+| Location           | 用来重定向接收方到非请求URL的位置来完成请求或标识新的资源    | Location: http://www.zcmhi.com/archives/94.html       |
+| Pragma             | 包括实现特定的指令，它可应用到响应链上的任何接收方           | Pragma: no-cache                                      |
+| Proxy-Authenticate | 它指出认证方案和可应用到代理的该URL上的参数                  | Proxy-Authenticate: Basic                             |
+| refresh            | 应用于重定向或一个新的资源被创造，在5秒之后重定向（由网景提出，被大部分浏览器支持） | Refresh: 5; url=http://www.zcmhi.com/archives/94.html |
+| Retry-After        | 如果实体暂时不可取，通知客户端在指定时间之后再次尝试         | Retry-After: 120                                      |
+| Server             | web服务器软件名称                                            | Server: Apache/1.3.27 (Unix) (Red-Hat/Linux)          |
+| Set-Cookie         | 设置Http Cookie                                              | Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1   |
+| Trailer            | 指出头域在分块传输编码的尾部存在                             | Trailer: Max-Forwards                                 |
+| Transfer-Encoding  | 文件传输编码                                                 | Transfer-Encoding:chunked                             |
+| Vary               | 告诉下游代理是使用缓存响应还是从原始服务器请求               | Vary: *                                               |
+| Via                | 告知代理客户端响应是通过哪里发送的                           | Via: 1.0 fred, 1.1 nowhere.com (Apache/1.1)           |
+| Warning            | 警告实体可能存在的问题                                       | Warning: 199 Miscellaneous warning                    |
+| WWW-Authenticate   | 表明客户端请求实体应该使用的授权方案                         | WWW-Authenticate: Basic                               |
 
 ## HTTPS
 
@@ -476,6 +582,32 @@ request.getRequestDispatcher("").include(request,response);`
 3. 如果需要在资源跳转时利用request域传递域属性则必须使用请求转发 `request.getRequestDispatcher().forward()`;
 4. 如果希望资源跳转后修改用户的地址栏则使用请求重定向`response.sendRedirect()`;
 5. 如果使用请求转发也可以重定向也可以,则优先使用请求转发,减少浏览器对服务器的访问次数减轻服务器的压力.
+##### 防盗链(使用Referer形式)
+
+**利用技术手段**，在不经过原始[内容提供者](https://so.csdn.net/so/search?q=内容提供者&spm=1001.2101.3001.7020)的同意或授权的情况下，将其网站上的内容**直接显示**在自己的网站上，或者通过**链接**的方式，让用户可以直接访问到原始内容提供者的网站上的内容。
+
+简单说就是:
+
+如果一个我的网站没有经过百度的同意或授权，就在我的网站上显示或链接网站B的图片、视频、文章等内容，那么我的这个网站就是在进行盗链。
+
+举个例子:现在别人在我的网站访问一个页面,这个页面却不是我的,我将百度链接展示给他,那么我这就叫盗链,而高明的盗链甚至会包装成你发觉不了的页面,让你没办法发现是百度.
+
+```java
+protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.setContentType("text/html;charset=utf-8");
+		String ref=request.getHeader("Referer");
+		if(ref==null || "".equals(ref)||!ref.startsWith("http://localhost")){
+			response.sendRedirect(request.getContextPath()+"/index.html");
+			return; 
+		}	
+		response.getWriter().write("防盗链.....这是主页");
+	}
+
+```
+
+
+
 ### Response
 
 response是Servlet.service方法的一个参数，类型为`javax.servlet.http.HttpServletResponse`。在客户端发出每个请求时，服务器都会创建一个response对象，并传入给`Servlet.service()`方法。response对象是用来对客户端进行响应的，这说明在`service()`方法中使用response对象可以完成对客户端的响应工作。
@@ -602,7 +734,7 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response) t
 
 ##### 请求从定向
 
-​response.sendRedirect("/Test/index.jsp");
+response.sendRedirect("/Test/index.jsp");
 
 ##### 设置刷新跳转
 
@@ -610,7 +742,7 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response) t
 
 转发:  `request.getRequestDispatcher("/index.jsp").forward(request, response);`
 
-​包含:`/request.getRequestDispatcher("/index.jsp").include(request, response);`
+包含:`/request.getRequestDispatcher("/index.jsp").include(request, response);`
 
 重定向:`response.sendRedirect("/Test/index.jsp");`
 
@@ -935,7 +1067,7 @@ String getFilterName(); //返回web.xml文件定义的名称
 ServletContext getServletContext()方法,//返回调用者所处的Servlet的上下文
 String getInitParameter(String name)://返回配置过滤器名是name的初始值；‘
 Enumeration getgetInitParameterNames()//以Enumeration形式返回过滤器所有初始化参数的名称
-```		
+```
 ```		
 	出现servlet3.0后在eclipes中就不需要配置web.xml了
 	如何进行创建出filter中的参数，写在web.xml中是不能实现的：
@@ -963,7 +1095,7 @@ Enumeration getgetInitParameterNames()//以Enumeration形式返回过滤器所�
 			<dispatcher>REQUEST</dispatcher>--用来配置以哪种方式对资源的访问(request/forward/include/error)
 		可以配置多个dispatcher如果不配置默认为request请求
 		</filter-mapping>
-```	
+```
 ```java
 @WebFilter(asyncSupported = true, description = "filterdemo", urlPatterns = { "/demo1Filr" })
 public class Demo1Filter implements Filter {

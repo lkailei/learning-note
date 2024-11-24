@@ -199,6 +199,94 @@ public class MessageConsumer{
 
 ## 消息分组
 
+
+
 ## 消息分区
 
 ​                                                                                      
+
+消息消费的保证
+
+1. 如果消息未成功消费(消费失败)可通过以下解决。
+
+1. 1. 将消息重新塞入队列 。通过配置`spring.cloud.stream.bindings.example-topic-input.consumer.requeue-rejected=true` 这个配置会将消费失败的消息进行重新执行。直到消费成功为止。
+   2. 自动重试。设置重试次数 spring cloud stream默认的会设置重试次数为3次 同时我们可以进行修改重试次数的默认值 `spring.cloud.stream.bindings.example-topic-input.consumer.max-attempts=1`。如果超过重试次数则进入死信对列进入DLQ进行处理
+   3. 进行降级处理。通过在消费端进行配置` @ServiceActivator(inputchannel="test-topic.stream-exception-handler.errors") `注解的方法进行执行。`test-topic->destination . handler-> group `相应的降级的。这一种也不能真正保证 也只能通过记录和后续处理来解决 
+   4. 使用DLQ队列。开启DLQ `spring.cloud.stream.rabbit.bindings.example-topic-input.consumer.auto-bind-dlq=true` （这个配置+设置计数器 能够解决消息堆积问题）。 需要装DLQ插件 可以控制消息在DLQ中存活时间。还可以配置消息加入死信队列的时候的错误。
+
+如何保证消息不会被重复消费
+
+1. 将消息进行分组。当我们指定了某个绑定所指向的消费组之后，往当前主题发送的消息在每个订阅消费组中，只会有一个订阅者接收和消费，从而实现了对消息的负载均衡。只所以之前会出现重复消费的问题，是由于默认情况下，任何订阅都会产生一个匿名消费组，所以每个订阅实例都会有自己的消费组，从而当有消息发送的时候，就形成了广播的模式.只需要在生产者和消费者加入group属性即可。
+
+## ChannelInterceptor
+
+ChannelInterceptor 拦截器拦截 ws 协议的请求/响应(`send/subscribe`)，不拦截 http 协议的请求/响应。
+
+[spring cloud stream channel intercaptor](https://dzone.com/articles/spring-cloud-stream-channel-interceptor)
+
+```
+//方法调用顺序：preSend -> postSend -> afterSendCompletion
+public class SocketChannelInterceptor implements ChannelInterceptor {
+
+    /**
+     * 消息发送到目标方法之前被调用
+     *
+     * @param message
+     * @param channel
+     * @return
+     */
+    @Override
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        System.out.println("preSend->");
+        return ChannelInterceptor.super.preSend(message, channel);
+    }
+
+    /**
+     * 消息正在发送过程中被调用，主要用这个方法就行
+     *
+     * @param message
+     * @param channel
+     * @param sent
+     */
+    @Override
+    public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
+        StompHeaderAccessor header = StompHeaderAccessor.wrap(message);
+        System.out.println("postSend->" + header.getDestination());
+    }
+
+    /**
+     * 消息发送完成之后被调用，一般用来做资源释放等工作。
+     *
+     * @param message
+     * @param channel
+     * @param sent
+     * @param ex
+     */
+    @Override
+    public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
+        System.out.println("afterSendCompletion->");
+        ChannelInterceptor.super.afterSendCompletion(message, channel, sent, ex);
+    }
+}
+
+```
+
+2. 配置中进行添加拦截器
+
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new SocketChannelInterceptor());
+    }
+
+    @Override
+    public void configureClientOutboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new SocketChannelInterceptor());
+    }
+}
+```
+

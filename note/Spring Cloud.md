@@ -6,9 +6,9 @@
 
 把一个大型的单体应用拆分为数十个支持微服务，他可扩展单个组件而不是整个的应用程序堆栈，从而满足服务等级协议
 
-​**定义**：围绕业务领域组件进行创建组件，这些应用可独立进行开发，管理迭代，在分散的组件中使用云架构和平台式部署，管理，和服务功能，使得产品交互更加的简单
+**定义**：围绕业务领域组件进行创建组件，这些应用可独立进行开发，管理迭代，在分散的组件中使用云架构和平台式部署，管理，和服务功能，使得产品交互更加的简单
 
-​**本质**:  是用一些功能比较明确的，业务精练的服务去解决更大的更实际的问题，（2012年为微服务元年）
+**本质**:  是用一些功能比较明确的，业务精练的服务去解决更大的更实际的问题，（2012年为微服务元年）
 
 ### 微服务架构：
 
@@ -641,7 +641,7 @@ eureka:
 
 ```
 
-​    创建服务feign:feign是集成了ribbon的一个服务消费者：项目中使用用Feign  可以理解为将ribbon峰会在哪个了一次
+  创建服务feign:feign是集成了ribbon的一个服务消费者：项目中使用用Feign  可以理解为将ribbon峰会在哪个了一次
 
 #### 熔断器防止服务雪崩：
 
@@ -752,7 +752,7 @@ public class HystrixDashboardConfiguration {
 
 ```
 
-​ 测试熔断localhost:8764/hystrix
+ 测试熔断localhost:8764/hystrix
 
 ##### hystrix触发fallback的方法：
 
@@ -937,16 +937,16 @@ spring:
 
 ###### 配置说明：
 
-​`spring.cloud.config.label`：配置仓库的分支
+`spring.cloud.config.label`：配置仓库的分支
 
 `spring.cloud.config.server.git.uri`：配置 Git 仓库地址（GitHub、GitLab、码云 ...）
 `
 
-​`spring.cloud.config.server.git.search-paths`：配置仓库路径（存放配置文件的目录）`
+`spring.cloud.config.server.git.search-paths`：配置仓库路径（存放配置文件的目录）`
 
-​`spring.cloud.config.server.git.username`：访问 Git 仓库的账号
+`spring.cloud.config.server.git.username`：访问 Git 仓库的账号
 
-​`spring.cloud.config.server.git.password`：访问 Git 仓库的密码
+`spring.cloud.config.server.git.password`：访问 Git 仓库的密码
 
 ##### 分布式配置中心客户端配置：
 
@@ -1069,7 +1069,7 @@ spring:
 #### 服务链路追踪：
 
  **这里主要使用ZipKin**​ 
- 
+
   每个服务向 ZipKin 报告计时数据，ZipKin 会根据调用关系通过 ZipKin UI 生成依赖关系图，显示了多少跟踪请求通过每个服务，该系统让开发者可通过一个 Web 前端轻松的收集和分析数据，例如用户每次请求服务的处理时间等，可方便的监测系统中存在的瓶颈 。
 
 **​说明**
@@ -3231,6 +3231,172 @@ public class DemobServiceClientFallback implements DemobServiceClient {
 - RequestTemplate中包含请求的所有信息，如请求参数，请求URL等。
 - RequestTemplate声场Request，然后将Request交给client处理，这个client默认是JDK的HTTPUrlConnection，也可以是OKhttp、Apache的HTTPClient等。
 - 最后client封装成LoadBaLanceClient，结合ribbon负载均衡地发起调用。
+
+#### Feign日志打印
+
+```java
+@Slf4j
+@Configuration
+public class FeignConfig {
+ 
+    /**
+     * feign 日志记录级别
+     * NONE：无日志记录（默认）
+     * BASIC：只记录请求方法和 url 以及响应状态代码和执行时间。
+     * HEADERS：记录请求和响应头的基本信息。
+     * FULL：记录请求和响应的头、正文和元数据。
+     *
+     * @return Logger.Level
+     */
+    @Bean
+    public Logger.Level feignLoggerLevel() {
+        return Logger.Level.FULL;
+    }
+}
+```
+再配置文件中配置对应的包
+```xml
+logging.level.com.xx.feign.xxxclient:debug
+```
+使用形式1
+
+```
+@FeignClient(url = "${glodon.api.url}", name = "GlodonFeignClient",configuration = FeignConfig.class)
+@Component
+public interface GlodonFeignClient {}
+```
+
+使用形式2
+
+```java
+
+@EnableFeignClients(value = "com.siiri.epcm.invoke.*.feign",defaultConfiguration = FeignConfig.class)
+public class InvokeWebApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(InvokeWebApplication.class, args);
+    }
+
+}
+```
+
+
+
+#### Feign传递token
+
+```java
+@Configuration
+public class FeignConfig implements RequestInterceptor {
+    @Override
+    public void apply(RequestTemplate template) {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (Objects.isNull(attributes)){
+            return;
+        }
+        HttpServletRequest request = attributes.getRequest();
+        // 添加token
+        template.header("Authorization", request.getHeader("Authorization"));
+        // 添加host
+        template.header("Host", request.getHeader("Host"));
+        // 添加自定义header头
+        template.header(ServletUtils.HEADER_SIIRI_PERSON, request.getHeader(ServletUtils.HEADER_SIIRI_PERSON));
+        template.header(ServletUtils.HEADER_SIIRI_PROJECT, request.getHeader(ServletUtils.HEADER_SIIRI_PROJECT));
+        template.header(ServletUtils.HEADER_SIIRI_ENT, request.getHeader(ServletUtils.HEADER_SIIRI_ENT));
+        template.header(ServletUtils.HEADER_SIIRI_ENT_STAFF, request.getHeader(ServletUtils.HEADER_SIIRI_ENT_STAFF));
+    }
+}
+```
+
+#### Feign 异步调用
+
+Feign是一个声明式的Web Service客户端，它使得编写HTTP客户端变得更简单。虽然Feign调用是阻塞的，但是可以通过以下几种方式提高Open接口调用和响应速度：
+
+1. 异步调用：使用Feign的异步调用功能，可以避免阻塞主线程，提高系统的响应速度。可以通过在接口方法上添加`@Async`注解来实现异步调用。
+2. 连接池：使用连接池可以避免频繁地创建和关闭连接，提高系统的性能。可以使用常见的连接池库，如HikariCP、Apache DBCP等，来管理Feign的连接。
+3. 压缩数据传输：通过压缩数据传输可以减少网络传输的数据量，从而降低网络延迟，提高响应速度。可以在Feign的配置中启用压缩功能。
+4. 缓存：对于经常访问的接口，可以使用缓存来减少对服务器的请求次数，提高系统的响应速度。可以使用常见的缓存库，如Ehcache、Redis等。
+5. 批量处理：对于需要处理大量数据的接口，可以使用批量处理来减少单个请求的次数，提高系统的响应速度。可以在Feign的配置中启用批量处理功能。
+6. 负载均衡：使用负载均衡可以将请求分散到多个服务器上处理，从而提高系统的吞吐量和响应速度。可以使用常见的负载均衡器，如Nginx、HAProxy等。
+7. 优化代码：通过对代码进行优化，可以减少系统的资源消耗和延迟，提高系统的响应速度。可以对代码进行性能分析和调优，如使用缓存、减少不必要的计算等。
+
+##### Feign 异步调用之回调函数型
+
+定义一个Feign客户端接口，并使用`@Async`注解标记异步方法。
+
+```java
+@FeignClient(name = "remote-service")  
+public interface RemoteServiceClient {  
+  
+    @Async 
+    CompletableFuture<String> getData(@RequestParam String param,Callback callback);  
+}
+```
+
+我们定义了一个名为`getData`的异步方法，并使用`@Async`注解标记它。该方法接受一个`Callback`对象作为参数，用于处理异步调用返回的数据。
+
+定义Callback接口类
+
+```java
+public class DataCallback implements Callback {  
+  
+    @Override  
+    public void onSuccess(String data) {  
+        // 处理异步调用返回的数据  
+        System.out.println("异步调用返回的数据：" + data);  
+    }  
+  
+    @Override  
+    public void onError(Throwable error) {  
+        // 处理异步调用出现的错误  
+        error.printStackTrace();  
+    }  
+}
+```
+
+使用feign客户端进行异步调用
+
+```java
+@Autowired  
+private RemoteServiceClient remoteServiceClient;  
+  
+public void callAsync() {  
+    DataCallback callback = new DataCallback();  
+    remoteServiceClient.getData("example", callback);  
+}
+```
+
+我们首先使用`@Autowired`注解注入`RemoteServiceClient`对象。然后，我们创建一个`DataCallback`对象，并将其作为参数传递给异步方法`getData`。当异步调用完成后，Feign会自动调用`DataCallback`对象的`onSuccess`或`onError`方法，并将相应的数据或错误信息传递给它。
+
+##### Feign异步调用之CompletableFuture
+
+创建Feign客户端接口
+
+```java
+@FeignClient(name = "remote-service")  
+public interface RemoteServiceClient {  
+  
+    @GetMapping("/endpoint")  
+    CompletableFuture<String> getData(@RequestParam String param);  
+}
+```
+
+使用feign客户端进行异步调用
+
+```java
+@Autowired  
+private RemoteServiceClient remoteServiceClient;  
+  
+public void asyncCall() {  
+    CompletableFuture<String> future = remoteServiceClient.getData("example");  
+    future.thenAccept(data -> System.out.println("异步调用返回的数据：" + data));  
+}
+```
+
+我们首先使用@Autowired注解来注入RemoteServiceClient对象。然后，我们调用getData方法进行异步调用，并将返回的CompletableFuture对象保存在future变量中。最后，我们使用future对象的thenAccept方法来处理异步调用返回的数据。当异步调用完成后，thenAccept方法将被调用，并将异步调用的结果作为参数传递给它。
+
+通过以上步骤，您可以实现Feign的异步调用。请注意，这里使用的是Spring Cloud OpenFeign的异步支持。如果您使用的是其他版本的Feign，可能需要使用不同的方式来实现异步调用
+
+
 
 #### Feign源码解析
 
