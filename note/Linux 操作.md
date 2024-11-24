@@ -429,7 +429,24 @@ gpgcheck=1
 gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 ```
 
+### 安装网络工具
 
+```
+sudo yum install net-tools
+```
+
+`net-tools` 是一个包含多个网络管理工具的软件包，这些工具主要用于配置和管理网络接口。以下是一些 `net-tools` 包中包含的主要工具及其功能：
+
+1. **ifconfig**: 用于配置和显示网络接口的详细信息，如IP地址、子网掩码、广播地址等。
+2. **route**: 用于显示和操作IP路由表。
+3. **netstat**: 用于显示网络连接、路由表、接口统计信息、伪装连接、多播成员等信息。
+4. **arp**: 用于显示和修改系统的ARP缓存。
+5. **rarp**: 用于显示和修改系统的RARP缓存（RARP是一种旧的协议，用于将MAC地址映射到IP地址）。
+6. **nameif**: 用于根据MAC地址配置网络接口的名称。
+7. **iptunnel**: 用于配置IP隧道。
+8. **mii-tool**: 用于查看和配置网络接口的MII（媒体独立接口）状态。
+
+虽然 `net-tools` 包提供了许多有用的网络管理工具，但在现代Linux系统中，许多功能已经被 `iproute2` 包中的工具所取代。例如，`ip` 命令可以替代 `ifconfig` 和 `route` 命令，`ss` 命令可以替代 `netstat` 命令。
 
 ### 安装jdk
 
