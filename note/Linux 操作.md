@@ -2,6 +2,20 @@
 
 # Linux 操作
 
+## 安装VMWare
+
+1. 注册登录https://support.broadcom.com/group/ecx/productfiles
+
+2. 进入
+
+   ![1732418334862](D:\repo\learning-note\note\assets\1732418334862.png)
+
+   然后进行下载
+
+   ![1732418151404](D:\repo\learning-note\note\assets\1732418151404.png)
+
+   下载完毕后安装，安装后遇到输入序列号时直接跳过，最后以个人使用即可
+
 ## Linux常用的命令：
 
 ###  文件操作
@@ -386,6 +400,36 @@ export CATALINA_HOME
 配置和上面的一致即可。
 
 ## CentOS下操作：
+
+### VMware 安装centos7
+
+安装完毕后配置使用yum install 报错
+
+![1732417595443](D:\repo\learning-note\note\assets\1732417595443.png)
+
+修改配置vi /etc/yum.repos.d/CentOS-Base.repo 
+
+```
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://mirrors.aliyun.com/centos/7/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://mirrors.aliyun.com/centos/7/updates/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://mirrors.aliyun.com/centos/7/extras/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+```
+
+
 
 ### 安装jdk
 
