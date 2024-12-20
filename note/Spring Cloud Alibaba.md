@@ -211,6 +211,88 @@ cmd shutdown.cmd
 
 或者双击shutdown.cmd运行文件。
 
+#### Nacos配置中心
+
+**pom.xml**
+
+```yaml
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+**bootstrap.yaml**
+
+```
+spring:
+  application:
+    name: myapp
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        namespace:
+        username:
+		password:
+		name:
+		enabled:
+```
+
+在Nacos配置中心中，配置文件的加载顺序和优先级是根据Spring Cloud的配置加载机制来决定的。当你在Nacos中配置了多个配置文件（如`ai-service.yaml`和`ai-service-dev.yaml`），并且激活了`dev`环境时，Spring Cloud会按照以下规则加载配置文件：
+
+**配置文件的命名规则**
+
+Spring Cloud Nacos配置中心会根据以下规则加载配置文件：
+
+- **默认配置文件**：`${spring.application.name}.${file-extension}`
+  - 例如：`ai-service.yaml`
+- **环境配置文件**：`${spring.application.name}-${profile}.${file-extension}`
+  - 例如：`ai-service-dev.yaml`
+
+ **配置文件的加载顺序**
+
+Spring Cloud Nacos会按照以下顺序加载配置文件：
+
+1. **优先加载环境配置文件**：
+   - 如果你在`bootstrap.yml`中激活了`dev`环境（`spring.profiles.active=dev`），Nacos会优先加载`ai-service-dev.yaml`。
+2. **如果没有环境配置文件，则加载默认配置文件**：
+   - 如果`ai-service-dev.yaml`不存在，Nacos会加载`ai-service.yaml`。
+
+**实际加载逻辑**
+
+假设你在Nacos中配置了以下两个文件：
+
+- `ai-service.yaml`
+- `ai-service-dev.yaml`
+
+并且你在`bootstrap.yml`中激活了`dev`环境：
+
+yaml
+
+复制
+
+```
+spring:
+  application:
+    name: ai-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+```
+
+**启动时会加载以下配置文件：**
+
+1. **ai-service-dev.yaml**：
+   - 因为`spring.profiles.active=dev`，Nacos会优先加载`ai-service-dev.yaml`。
+2. **ai-service.yaml**：
+   - 如果`ai-service-dev.yaml`中没有覆盖某些配置项，Nacos会继续加载`ai-service.yaml`中的配置作为补充。
+
 ### 创建服务提供者
 
 1.加入pom.xml

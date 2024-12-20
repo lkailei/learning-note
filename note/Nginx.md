@@ -796,6 +796,8 @@ server {
   location /office/ {
     proxy_redirect off; 
     proxy_set_header X-Forwarded-Host $host:8829/office; 设置请求头header
+    # proxy_pass末尾加 /是代表着会抛弃location的请求。 如：/office/web-api 实际请求就是http://172.16.30.33:11100/web-api
+    # 如果proxy_pass中末尾没有/ 则代表着要把请求直接加到路径上如。/office/web-api 实际请求就是http://172.16.30.33:11100/office/web-api
     proxy_pass http://172.16.30.33:11100/;
   }
 }

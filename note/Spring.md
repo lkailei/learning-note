@@ -1295,11 +1295,11 @@ public class UserDaoImpl implements UserDao {
 
 Spring整合其他两大框架原理：
 
-​web层:用struts2+jsp然后Action对象交给Spring管理
+web层:用struts2+jsp然后Action对象交给Spring管理
 
-​service层：JavaBean直接交给Spring 管理
+service层：JavaBean直接交给Spring 管理
 
-​dao :hibernate中的sessionfactory和Session获得，aop事务都交给Spring管理都由Spring容器来创建和维护
+dao :hibernate中的sessionfactory和Session获得，aop事务都交给Spring管理都由Spring容器来创建和维护
 
 > 导包：
 >
