@@ -43,6 +43,16 @@ Docker容器是docker运行的实体，容器可以被创建，启动，停止�
 一个 Docker Registry 中可以包含多个仓库（Repository)；每个仓库可以包含多个标签（Tag）；每个标签对应一个镜像。
 ​通常，一个仓库会包含同一个软件不同版本的镜像，而标签就常用于对应该软件的各个版本。我们可以通过 <仓库名>:<标签> 的格式来指定具体是这个软件哪个版本的镜像。如果不给出标签，将以 latest 作为默认标签。
 
+### Docker 更换镜像源
+
+ /etc/docker/daemon.json  如果没有则创建这个文件 在这里加入
+
+```
+{ "registry-mirrors":["http://hub-mirror.c.163.com"]}
+```
+
+重启服务：systemctl restart docker
+
 ##	ubuntu安装docker:
 
 - 命令:	`wget -q0- http://get.docker.com/ |sh`
@@ -118,7 +128,7 @@ docker version
 
 [![Dmy2E4.png](https://s3.ax1x.com/2020/11/18/Dmy2E4.png)](https://imgchr.com/i/Dmy2E4)
 
-**idea链接：**
+###  idea使用2375端口进行打包上传
 
 `vim /usr/lib/systemd/system/docker.service` 找到 `ExecStart=/usr/bin/dockerd-current` 然后直接加入如下
 
@@ -134,6 +144,10 @@ docker version
 ```
 systemctl daemon-reload && systemctl restart docker
 ```
+
+<font color="red">代码中需要使用Docker maven plugin插件进行配置</font>
+
+
 
 ## 修改docker 默认储存位置
 
@@ -1701,7 +1715,7 @@ services:
       # 前面宿主机目录，后面容器内目录(宿主机没有的目录会自动创建)
       - ./data/mysql-8.0/conf:/etc/mysql/conf.d 
       - ./data/mysql-8.0/data:/var/lib/mysql
-      -./data/mysql-8.0/logs:/var/log/mysql
+      - ./data/mysql-8.0/logs:/var/log/mysql
     ports:
       # 前面宿主机目录，后面容器内目录
       - 3306:3306
