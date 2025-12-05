@@ -2,11 +2,7 @@
 
 ## Appium+python自动化测试 
 
-本文用于android和python自动化测试学习使用其中有的部分是博客收集，感谢博主，同时感谢b站中的up组
-
-文章由：
-
-[kay三石]: https://me.csdn.net/qq_37256896	"blog"
+本文用于android和python自动化测试学习使用其中有的部分是博客收集
 
 ## **python：**
 
@@ -465,7 +461,7 @@ adb install | -r <apkName> -r是覆盖元安装文件 -s可以指定设备命令
 
 失败后进入 adb remount,adb shell, cd /data, chmod 777 local 赋予读写权限即可
 
-####package与Activity
+#### package与Activity
 
 package:是唯一的包名，可以识别这个组件是在哪个位置
 
@@ -787,11 +783,11 @@ desired Capabilitys的功能是配置Appium的会话，是一组的键值对的�
 
 这组期望的能力的表示为Appium到在iPhone 7模拟器与iOS 11开始自动化会议，使用的愿望[XCUITest驱动](http://appium.io/docs/en/drivers/ios-xcuitest/index.html)，以`/path/to/my.app`作为待测应用程序。
 
-#####session:
+##### session:
 
 Appium的客户端和服务端之间的通信必须在session中的上下文中进行客户端发起通信色时候首先技术逆行json对象给服务器，然后创建session的ID返回客户端，之后客户端可以用session的Id来操作
 
-#####capability配置讲解：
+##### capability配置讲解：
 
 ###### 公用的Capability
 
