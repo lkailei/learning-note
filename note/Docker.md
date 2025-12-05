@@ -169,7 +169,7 @@ systemctl restart docker或者service docker stop
 mv /var/lib/docker /data/docker
 
 做一个软连接
-ln -s /root/data/docker /var/lib/docker
+ln -s /root/data/docker/ /var/lib/docker
 这时候启动Docker时发现存储目录依旧是/var/lib/docker，但是实际上是存储在数据盘的，你可以在数据盘上看到容量变化。
 ```
 
@@ -203,10 +203,21 @@ ExecStart=/usr/bin/dockerd --graph /new-path/docker
 systemctl daemon-reload 
 
 // 移动之前的数据
-mv /var/lib/docker /data/docker
+mv /var/lib/docker/ /data/docker
  // 重启docker 
  systemctl restart docker.service
 ```
+
+### 方式三
+
+```
+sudo systemctl stop docker
+sudo rsync -av /var/lib/docker/ /home/data/dcoker
+ln -s /home/data/docker /var/lib/docker
+sudo systemctl restart docker
+```
+
+
 
 ## DockerFile：
 

@@ -429,6 +429,29 @@ gpgcheck=1
 gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 ```
 
+### 替换为阿里镜像源
+
+```bash
+sudo mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak 
+
+sudo curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+
+sudo yum clean install
+sudo yum makeache
+```
+
+### 安装工具时找不到需安装EPEL/
+
+```bash
+# 安装EPEL仓库
+sudo yum install -y epel-release
+# 更新仓库缓存
+sudo yum makecache
+sudo yum install -y nethogs
+```
+
+
+
 ### 安装网络工具
 
 ```

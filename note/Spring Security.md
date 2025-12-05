@@ -2870,15 +2870,13 @@ public class UserController {
 
 ### Spring Security Oauth2整合单点登录
 
-
-
-
-
 [参考：Spring Security OAuth2 开发指南中文版](https://www.ktanx.com/blog/p/5008)
 
 [Spring Security系列一 权限控制基本功能实现](https://www.ktanx.com/blog/p/4600)
 
 [Spring Security系列二 用户登录认证数据库实现](https://www.ktanx.com/blog/p/4916)
+
+
 
 
 
